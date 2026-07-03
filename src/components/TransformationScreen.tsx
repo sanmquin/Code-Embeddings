@@ -47,23 +47,50 @@ const TransformationScreen: React.FC<TransformationScreenProps> = ({ onApprove }
     }
   };
 
+  const Window: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
+    <div style={{
+      border: '1px solid #444',
+      borderRadius: '6px',
+      overflow: 'hidden',
+      marginBottom: '20px',
+      backgroundColor: '#1e1e1e'
+    }}>
+      <div style={{
+        backgroundColor: '#333',
+        padding: '8px 16px',
+        borderBottom: '1px solid #444',
+        fontSize: '0.9rem',
+        fontWeight: 'bold',
+        color: '#e0e0e0'
+      }}>
+        {title}
+      </div>
+      <div style={{ padding: '0' }}>
+        {children}
+      </div>
+    </div>
+  );
+
   return (
     <div className="transformation-screen">
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-        <div>
-          <h3>Original Python Solution</h3>
-          <pre>{pythonSolution}</pre>
-        </div>
-        <div>
-          <h3>Refactored TypeScript Code</h3>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px' }}>
+        <Window title="Original Python Solution">
+          <pre style={{ margin: 0, borderRadius: 0 }}>{pythonSolution}</pre>
+        </Window>
+
+        <Window title="Refactored JavaScript Code">
           {isLoading ? (
-            <p>Refactoring...</p>
+            <div style={{ padding: '20px' }}>
+              <p>Refactoring...</p>
+            </div>
           ) : transformedCode ? (
-            <pre>{transformedCode}</pre>
+            <pre style={{ margin: 0, borderRadius: 0 }}>{transformedCode}</pre>
           ) : (
-            <p>No refactored code yet. Click "Refactor" to start.</p>
+            <div style={{ padding: '20px' }}>
+              <p>No refactored code yet. Click "Refactor" to start.</p>
+            </div>
           )}
-        </div>
+        </Window>
       </div>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
