@@ -5,8 +5,8 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f9f9f9;
-  color: #333;
+  background-color: #121212;
+  color: #e0e0e0;
 }
 
 .app {
@@ -17,7 +17,7 @@ body {
 
 header {
   margin-bottom: 2rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #333;
   padding-bottom: 1rem;
 }
 
@@ -29,14 +29,15 @@ button {
   margin-right: 1rem;
   padding: 0.6rem 1.2rem;
   cursor: pointer;
-  border: 1px solid #ccc;
-  background-color: #fff;
+  border: 1px solid #444;
+  background-color: #1e1e1e;
+  color: #e0e0e0;
   border-radius: 4px;
   font-size: 1rem;
 }
 
 button:hover {
-  background-color: #f0f0f0;
+  background-color: #333;
 }
 
 button.active {
@@ -70,16 +71,16 @@ table {
 th, td {
   text-align: left;
   padding: 0.8rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #333;
 }
 
 th {
-  background-color: #f4f4f4;
+  background-color: #252525;
 }
 
 .transformation-screen, .execution-screen {
-  background: white;
+  background: #1e1e1e;
   padding: 2rem;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
 }

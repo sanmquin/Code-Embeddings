@@ -22,14 +22,14 @@ const handler: Handler = async (event) => {
 
     const prompt = `
       You are an expert software engineer specialized in ARC (Abstraction and Reasoning Corpus) challenges.
-      Transform the following Python solution into a modular, well-documented TypeScript library.
+      Transform the following Python solution into a modular, well-documented JavaScript library.
 
-      Rules for the generated TypeScript:
+      Rules for the generated JavaScript:
       1. **Modularity**: Break down the logic into small, single-purpose functions.
       2. **Documentation**: Each function must have JSDoc comments explaining its purpose, parameters, and return value.
       3. **No Magic**: Avoid hardcoded "magic" values. Use descriptive parameters.
-      4. **Type Safety**: Use appropriate TypeScript types (e.g., type Grid = number[][]).
-      5. **Entry Point**: You MUST provide a 'solve(grid: number[][]): number[][]' function that orchestrates the others.
+      4. **Type Safety**: Use JSDoc comments for type information. Do NOT use TypeScript-specific syntax like interfaces, type aliases, or type annotations on parameters/variables.
+      5. **Entry Point**: You MUST provide a 'solve(grid)' function that orchestrates the others.
       6. **Browser Compatible**: Do not use Node.js specific APIs.
 
       Python Solution:
@@ -43,7 +43,7 @@ const handler: Handler = async (event) => {
       Response Format:
       Respond ONLY with a valid JSON object:
       {
-        "code": "/* TypeScript code here */"
+        "code": "/* JavaScript code here */"
       }
     `;
 

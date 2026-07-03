@@ -11,6 +11,7 @@ interface TestResult {
   passed: boolean;
   actual?: any;
   expected?: any;
+  input?: any;
   error?: string;
 }
 
@@ -35,7 +36,7 @@ const ExecutionScreen: React.FC<ExecutionScreenProps> = ({ code }) => {
     const newResults: TestResult[] = [];
 
     try {
-      // Transpile TypeScript to JavaScript using Sucrase
+      // Transpile JavaScript (could have modern features or remnants of types) using Sucrase
       const compiled = transform(code, {
         transforms: ['typescript'],
       });
@@ -56,9 +57,9 @@ const ExecutionScreen: React.FC<ExecutionScreenProps> = ({ code }) => {
         try {
           const actual = solveFn(caseData.input);
           const passed = JSON.stringify(actual) === JSON.stringify(caseData.output);
-          newResults.push({ index, type, passed, actual, expected: caseData.output });
+          newResults.push({ index, type, passed, actual, expected: caseData.output, input: caseData.input });
         } catch (err: any) {
-          newResults.push({ index, type, passed: false, error: err.message });
+          newResults.push({ index, type, passed: false, error: err.message, input: caseData.input, expected: caseData.output });
         }
       };
 
@@ -75,9 +76,56 @@ const ExecutionScreen: React.FC<ExecutionScreenProps> = ({ code }) => {
     setIsRunning(false);
   };
 
+  const renderGrid = (grid: any) => (
+    <pre style={{ margin: 0, padding: '0.5rem', fontSize: '0.8rem', background: '#1e1e1e' }}>
+      {JSON.stringify(grid, null, 2)}
+    </pre>
+  );
+
   return (
     <div className="execution-screen">
       <h3>Execution & Verification</h3>
+
+      <div style={{ marginBottom: '20px' }}>
+        <h4>Test Cases to Run</h4>
+        {taskData ? (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px' }}>
+            {taskData.train.map((ex: any, i: number) => (
+              <div key={`train-${i}`} style={{ border: '1px solid #444', padding: '10px', borderRadius: '4px' }}>
+                <strong>Train Case #{i}</strong>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '5px' }}>
+                  <div>
+                    <small>Input:</small>
+                    {renderGrid(ex.input)}
+                  </div>
+                  <div>
+                    <small>Expected Output:</small>
+                    {renderGrid(ex.output)}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {taskData.test.map((ex: any, i: number) => (
+              <div key={`test-${i}`} style={{ border: '1px solid #444', padding: '10px', borderRadius: '4px' }}>
+                <strong>Test Case #{i}</strong>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '5px' }}>
+                  <div>
+                    <small>Input:</small>
+                    {renderGrid(ex.input)}
+                  </div>
+                  <div>
+                    <small>Expected Output:</small>
+                    {renderGrid(ex.output)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p>Loading task data...</p>
+        )}
+      </div>
+
       <button onClick={runTests} disabled={isRunning || !taskData}>
         {isRunning ? 'Running...' : 'Run Tests'}
       </button>
@@ -95,6 +143,8 @@ const ExecutionScreen: React.FC<ExecutionScreenProps> = ({ code }) => {
               <tr>
                 <th>Type</th>
                 <th>Index</th>
+                <th>Input</th>
+                <th>Expected</th>
                 <th>Status</th>
                 <th>Details</th>
               </tr>
@@ -104,14 +154,19 @@ const ExecutionScreen: React.FC<ExecutionScreenProps> = ({ code }) => {
                 <tr key={i}>
                   <td>{res.type}</td>
                   <td>{res.index}</td>
-                  <td style={{ color: res.passed ? 'green' : 'red' }}>
+                  <td>{renderGrid(res.input)}</td>
+                  <td>{renderGrid(res.expected)}</td>
+                  <td style={{ color: res.passed ? '#4caf50' : '#f44336', fontWeight: 'bold' }}>
                     {res.passed ? 'PASS' : 'FAIL'}
                   </td>
                   <td>
                     {res.error ? (
-                      <span style={{ color: 'red' }}>{res.error}</span>
+                      <span style={{ color: '#f44336' }}>{res.error}</span>
                     ) : !res.passed ? (
-                      <span>Expected {JSON.stringify(res.expected)} but got {JSON.stringify(res.actual)}</span>
+                      <div>
+                        <small>Actual:</small>
+                        {renderGrid(res.actual)}
+                      </div>
                     ) : (
                       'Correct'
                     )}
@@ -123,8 +178,8 @@ const ExecutionScreen: React.FC<ExecutionScreenProps> = ({ code }) => {
         )}
       </div>
 
-      <div style={{ marginTop: '20px' }}>
-        <h4>Refactored TypeScript Code:</h4>
+      <div style={{ marginTop: '40px' }}>
+        <h4>Refactored JavaScript Code:</h4>
         <pre>{code}</pre>
       </div>
     </div>
