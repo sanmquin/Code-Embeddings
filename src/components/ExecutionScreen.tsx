@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { transform } from 'sucrase';
+import MatrixVisualization from './MatrixVisualization';
 
 interface ExecutionScreenProps {
   code: string;
@@ -76,11 +77,16 @@ const ExecutionScreen: React.FC<ExecutionScreenProps> = ({ code }) => {
     setIsRunning(false);
   };
 
-  const renderGrid = (grid: any) => (
-    <pre style={{ margin: 0, padding: '0.5rem', fontSize: '0.8rem', background: '#1e1e1e' }}>
-      {JSON.stringify(grid, null, 2)}
-    </pre>
-  );
+  const renderGrid = (grid: any) => {
+    if (Array.isArray(grid) && Array.isArray(grid[0])) {
+      return <MatrixVisualization data={grid} />;
+    }
+    return (
+      <pre style={{ margin: 0, padding: '0.5rem', fontSize: '0.8rem', background: '#1e1e1e' }}>
+        {JSON.stringify(grid, null, 2)}
+      </pre>
+    );
+  };
 
   return (
     <div className="execution-screen">
