@@ -21,6 +21,35 @@ header {
   padding-bottom: 1rem;
 }
 
+.task-loader {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-start;
+  align-items: center;
+  margin-top: 15px;
+}
+
+.task-loader input {
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid #444;
+  background-color: #2a2a2a;
+  color: #fff;
+  width: 200px;
+  font-family: inherit;
+}
+
+.task-loader input:focus {
+  outline: none;
+  border-color: #0074D9;
+}
+
+.error-message {
+  color: #ff4136;
+  margin-top: 10px;
+  font-size: 0.9rem;
+}
+
 nav {
   margin-bottom: 2rem;
 }

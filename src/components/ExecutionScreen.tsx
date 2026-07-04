@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { transform } from 'sucrase';
 import MatrixVisualization from './MatrixVisualization';
 
 interface ExecutionScreenProps {
   code: string;
+  taskData: any;
 }
 
 interface TestResult {
@@ -16,18 +17,10 @@ interface TestResult {
   error?: string;
 }
 
-const ExecutionScreen: React.FC<ExecutionScreenProps> = ({ code }) => {
-  const [taskData, setTaskData] = useState<any>(null);
+const ExecutionScreen: React.FC<ExecutionScreenProps> = ({ code, taskData }) => {
   const [results, setResults] = useState<TestResult[]>([]);
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [transpilationError, setTranspilationError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetch('/data/00576224.json')
-      .then(res => res.json())
-      .then(data => setTaskData(data))
-      .catch(err => console.error('Failed to load task data', err));
-  }, []);
 
   const runTests = () => {
     if (!taskData || !code) return;

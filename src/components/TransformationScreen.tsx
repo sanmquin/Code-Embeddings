@@ -1,28 +1,23 @@
 import React, { useState, useEffect } from 'react';
 
 interface TransformationScreenProps {
+  pythonSolution: string;
+  taskData: any;
   onApprove: (code: string) => void;
 }
 
-const TransformationScreen: React.FC<TransformationScreenProps> = ({ onApprove }) => {
-  const [pythonSolution, setPythonSolution] = useState<string>('');
-  const [taskData, setTaskData] = useState<any>(null);
+const TransformationScreen: React.FC<TransformationScreenProps> = ({
+  pythonSolution,
+  taskData,
+  onApprove
+}) => {
   const [transformedCode, setTransformedCode] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Load initial solution and task data
-    Promise.all([
-      fetch('/solutions/00576224.py').then(res => res.text()),
-      fetch('/data/00576224.json').then(res => res.json())
-    ]).then(([solution, data]) => {
-      setPythonSolution(solution);
-      setTaskData(data);
-    }).catch(err => {
-      setError('Failed to load solution or task data: ' + err.message);
-    });
-  }, []);
+    setTransformedCode('');
+  }, [pythonSolution]);
 
   const handleRefactor = async () => {
     setIsLoading(true);
