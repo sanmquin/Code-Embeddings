@@ -12,11 +12,13 @@ const TransformationScreen: React.FC<TransformationScreenProps> = ({
   onApprove
 }) => {
   const [transformedCode, setTransformedCode] = useState<string>('');
+  const [feedback, setFeedback] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setTransformedCode('');
+    setFeedback('');
   }, [pythonSolution]);
 
   const handleRefactor = async () => {
@@ -26,7 +28,12 @@ const TransformationScreen: React.FC<TransformationScreenProps> = ({
       const response = await fetch('/.netlify/functions/transform', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ solution: pythonSolution, taskData })
+        body: JSON.stringify({
+          solution: pythonSolution,
+          taskData,
+          feedback,
+          currentCode: transformedCode
+        })
       });
 
       if (!response.ok) {
@@ -68,10 +75,31 @@ const TransformationScreen: React.FC<TransformationScreenProps> = ({
 
   return (
     <div className="transformation-screen">
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px' }}>
-        <Window title="Original Python Solution">
-          <pre style={{ margin: 0, borderRadius: 0 }}>{pythonSolution}</pre>
-        </Window>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <Window title="Original Python Solution">
+            <pre style={{ margin: 0, borderRadius: 0 }}>{pythonSolution}</pre>
+          </Window>
+
+          <Window title="Feedback for LLM">
+            <textarea
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+              placeholder="Provide feedback to improve the refactored code..."
+              style={{
+                width: '100%',
+                minHeight: '150px',
+                backgroundColor: '#1e1e1e',
+                color: '#e0e0e0',
+                border: 'none',
+                padding: '12px',
+                fontSize: '1rem',
+                resize: 'vertical',
+                outline: 'none'
+              }}
+            />
+          </Window>
+        </div>
 
         <Window title="Refactored JavaScript Code">
           {isLoading ? (
