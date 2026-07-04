@@ -20,11 +20,11 @@ function App() {
     setScreen('transformation')
 
     const pythonUrlPatterns = [
-      `https://raw.githubusercontent.com/sanmquin/ARC/main/solves/${id}/solver.py`,
-      `https://raw.githubusercontent.com/sanmquin/ARC/main/solves/${id}/solve.py`,
-      `https://raw.githubusercontent.com/sanmquin/ARC/main/solves/${id}.py`
+      `https://raw.githubusercontent.com/sanmquin/ARC/refs/heads/main/solves/${id}/solver.py`,
+      `https://raw.githubusercontent.com/sanmquin/ARC/refs/heads/main/solves/${id}/solve.py`,
+      `https://raw.githubusercontent.com/sanmquin/ARC/refs/heads/main/solves/${id}.py`
     ]
-    const jsonUrl = `https://raw.githubusercontent.com/sanmquin/ARC/main/dataset/tasks/${id}.json`
+    const jsonUrl = `https://raw.githubusercontent.com/sanmquin/ARC/refs/heads/main/dataset/tasks/${id}.json`
     setDebugInfo({ pythonUrls: pythonUrlPatterns, jsonUrl })
 
     try {
