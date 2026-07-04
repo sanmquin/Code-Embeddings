@@ -5,6 +5,7 @@ import MatrixVisualization from './MatrixVisualization';
 interface ExecutionScreenProps {
   code: string;
   taskData: any;
+  onTestsPassed: (passed: boolean) => void;
 }
 
 interface TestResult {
@@ -17,7 +18,7 @@ interface TestResult {
   error?: string;
 }
 
-const ExecutionScreen: React.FC<ExecutionScreenProps> = ({ code, taskData }) => {
+const ExecutionScreen: React.FC<ExecutionScreenProps> = ({ code, taskData, onTestsPassed }) => {
   const [results, setResults] = useState<TestResult[]>([]);
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [transpilationError, setTranspilationError] = useState<string | null>(null);
@@ -59,6 +60,9 @@ const ExecutionScreen: React.FC<ExecutionScreenProps> = ({ code, taskData }) => 
 
       taskData.train.forEach((ex: any, i: number) => runCase(ex, 'train', i));
       taskData.test.forEach((ex: any, i: number) => runCase(ex, 'test', i));
+
+      const allPassed = newResults.length > 0 && newResults.every(r => r.passed);
+      onTestsPassed(allPassed);
 
     } catch (err: any) {
       console.error('Failed to execute code', err);

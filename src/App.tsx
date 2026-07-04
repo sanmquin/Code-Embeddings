@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import TransformationScreen from './components/TransformationScreen'
 import ExecutionScreen from './components/ExecutionScreen'
+import PublishScreen from './components/PublishScreen'
 import './index.css'
 
 function App() {
-  const [screen, setScreen] = useState<'transformation' | 'execution'>('transformation')
+  const [screen, setScreen] = useState<'transformation' | 'execution' | 'publish'>('transformation')
   const [approvedCode, setApprovedCode] = useState<string>('')
   const [taskId, setTaskId] = useState<string>('00576224')
   const [pythonSolution, setPythonSolution] = useState<string>('')
@@ -12,11 +13,13 @@ function App() {
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
   const [debugInfo, setDebugInfo] = useState<{ pythonUrls: string[], jsonUrl: string } | null>(null)
+  const [testsPassed, setTestsPassed] = useState<boolean>(false)
 
   const loadTask = async (id: string) => {
     setIsLoading(true)
     setError(null)
     setApprovedCode('')
+    setTestsPassed(false)
     setScreen('transformation')
 
     const pythonUrlPatterns = [
@@ -140,6 +143,13 @@ function App() {
         >
           2. Execute & Verify
         </button>
+        <button
+          onClick={() => setScreen('publish')}
+          disabled={!testsPassed}
+          className={screen === 'publish' ? 'active' : ''}
+        >
+          3. Publish to GitHub
+        </button>
       </nav>
 
       <main>
@@ -149,8 +159,14 @@ function App() {
             taskData={taskData}
             onApprove={handleApprove}
           />
+        ) : screen === 'execution' ? (
+          <ExecutionScreen
+            code={approvedCode}
+            taskData={taskData}
+            onTestsPassed={setTestsPassed}
+          />
         ) : (
-          <ExecutionScreen code={approvedCode} taskData={taskData} />
+          <PublishScreen taskId={taskId} code={approvedCode} />
         )}
       </main>
     </div>
