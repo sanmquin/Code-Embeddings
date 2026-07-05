@@ -7,6 +7,33 @@ interface TransformationScreenProps {
   onCodeChange: (code: string) => void;
 }
 
+const Window: React.FC<{ title: string; children: React.ReactNode; flex?: number; minHeight?: string }> = ({ title, children, flex, minHeight }) => (
+  <div style={{
+    border: '1px solid #444',
+    borderRadius: '6px',
+    overflow: 'hidden',
+    backgroundColor: '#1e1e1e',
+    display: 'flex',
+    flexDirection: 'column',
+    flex: flex ?? 'none',
+    minHeight: minHeight ?? 'auto'
+  }}>
+    <div style={{
+      backgroundColor: '#333',
+      padding: '8px 16px',
+      borderBottom: '1px solid #444',
+      fontSize: '0.9rem',
+      fontWeight: 'bold',
+      color: '#e0e0e0'
+    }}>
+      {title}
+    </div>
+    <div style={{ padding: '0', flex: 1, overflow: 'auto' }}>
+      {children}
+    </div>
+  </div>
+);
+
 const TransformationScreen: React.FC<TransformationScreenProps> = ({
   pythonSolution,
   taskData,
@@ -18,7 +45,6 @@ const TransformationScreen: React.FC<TransformationScreenProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    onCodeChange('');
     setFeedback('');
   }, [pythonSolution]);
 
@@ -49,33 +75,6 @@ const TransformationScreen: React.FC<TransformationScreenProps> = ({
       setIsLoading(false);
     }
   };
-
-  const Window: React.FC<{ title: string; children: React.ReactNode; flex?: number; minHeight?: string }> = ({ title, children, flex, minHeight }) => (
-    <div style={{
-      border: '1px solid #444',
-      borderRadius: '6px',
-      overflow: 'hidden',
-      backgroundColor: '#1e1e1e',
-      display: 'flex',
-      flexDirection: 'column',
-      flex: flex ?? 'none',
-      minHeight: minHeight ?? 'auto'
-    }}>
-      <div style={{
-        backgroundColor: '#333',
-        padding: '8px 16px',
-        borderBottom: '1px solid #444',
-        fontSize: '0.9rem',
-        fontWeight: 'bold',
-        color: '#e0e0e0'
-      }}>
-        {title}
-      </div>
-      <div style={{ padding: '0', flex: 1, overflow: 'auto' }}>
-        {children}
-      </div>
-    </div>
-  );
 
   return (
     <div className="transformation-screen" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>

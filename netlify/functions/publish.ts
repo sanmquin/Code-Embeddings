@@ -133,7 +133,7 @@ const handler: Handler = async (event) => {
         content: readmeContent
       },
       ...libraryFunctions.map(fn => ({
-        path: `library/${fn.name}.ts`,
+        path: `library/${taskId}_${fn.name}.ts`,
         mode: '100644',
         type: 'blob',
         content: fn.code

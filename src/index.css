@@ -137,3 +137,18 @@ th {
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.5);
 }
+
+.stored-solutions-select {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #444;
+  background-color: #2a2a2a;
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.stored-solutions-select:focus {
+  outline: none;
+  border-color: #0074D9;
+}
