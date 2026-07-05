@@ -1,43 +1,45 @@
-interface Point {
-  r: number;
-  c: number;
+interface Component {
+  r: number[];
+  c: number[];
+  color: number;
 }
 
 /**
- * Finds all connected components of the value 2 in a 2D grid using BFS.
- * Connectivity is defined as adjacent cells sharing an edge (up, down, left, right).
- * 
- * @param {number[][]} grid - The input grid to scan for components.
- * @returns {Point[][]} An array of components, where each component is an array of coordinate objects.
+ * Scans the grid for connected components of non-zero colors.
+ * @param grid - A 2D array representing the input puzzle grid.
+ * @returns An array of objects, each defining the coordinates and color of a unique component.
  */
-export function findComponents(grid: number[][]): Point[][] {
-  const rows: number = grid.length;
-  const cols: number = grid[0].length;
+export function findComponents(grid: number[][]): Component[] {
+  const rows = grid.length;
+  const cols = grid[0].length;
   const visited: boolean[][] = Array.from({ length: rows }, () => Array(cols).fill(false));
-  const components: Point[][] = [];
+  const components: Component[] = [];
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
-      if (grid[r][c] === 2 && !visited[r][c]) {
-        const component: Point[] = [];
+      if (grid[r][c] !== 0 && !visited[r][c]) {
+        const color = grid[r][c];
+        const cells: [number, number][] = [];
         const queue: [number, number][] = [[r, c]];
         visited[r][c] = true;
 
         while (queue.length > 0) {
           const [currR, currC] = queue.shift()!;
-          component.push({ r: currR, c: currC });
-
-          const neighbors: [number, number][] = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+          cells.push([currR, currC]);
+          const neighbors = [[-1, 0], [1, 0], [0, -1], [0, 1]];
           for (const [dr, dc] of neighbors) {
-            const nr: number = currR + dr;
-            const nc: number = currC + dc;
-            if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && !visited[nr][nc] && grid[nr][nc] === 2) {
+            const nr = currR + dr, nc = currC + dc;
+            if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && !visited[nr][nc] && grid[nr][nc] === color) {
               visited[nr][nc] = true;
               queue.push([nr, nc]);
             }
           }
         }
-        components.push(component);
+        components.push({
+          r: cells.map(p => p[0]),
+          c: cells.map(p => p[1]),
+          color
+        });
       }
     }
   }
