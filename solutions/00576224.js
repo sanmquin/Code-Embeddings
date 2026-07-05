@@ -1,23 +1,19 @@
 /**
- * Tiling utilities for ARC grid manipulation.
- */
-
-/**
- * Flips a row array horizontally.
- * @param {Array<number>} row - The original grid row.
- * @returns {Array<number>} A new array representing the flipped row.
+ * Flips a row horizontally.
+ * @param {Array<number>} row - The input row.
+ * @returns {Array<number>} The flipped row.
  */
 function flipRow(row) {
   return [...row].reverse();
 }
 
 /**
- * Creates a row repeated a specific number of times.
+ * Repeats a row a specified number of times by concatenation.
  * @param {Array<number>} row - The row to repeat.
- * @param {number} times - How many times to repeat the row.
- * @returns {Array<number>} The tiled row.
+ * @param {number} times - How many times to repeat.
+ * @returns {Array<number>} The repeated row.
  */
-function tileRow(row, times) {
+function repeatRow(row, times) {
   let result = [];
   for (let i = 0; i < times; i++) {
     result = result.concat(row);
@@ -26,33 +22,32 @@ function tileRow(row, times) {
 }
 
 /**
- * Generates a single block row based on the block index and input grid.
- * @param {Array<Array<number>>} grid - The input grid.
- * @param {number} blockIndex - The vertical index of the block (0, 1, 2).
- * @param {number} repeatCount - Number of times to repeat the grid width-wise.
- * @returns {Array<Array<number>>} The processed grid block.
+ * Determines the target grid size factor by comparing input and output dimensions.
+ * @param {Array<Array<number>>} input - The input grid.
+ * @param {Array<Array<number>>} output - The output grid.
+ * @returns {number} The scaling factor (e.g., 3).
  */
-function processBlockRow(grid, blockIndex, repeatCount) {
-  const isFlipped = blockIndex % 2 !== 0;
-  return grid.map(row => {
-    const processedRow = isFlipped ? flipRow(row) : row;
-    return tileRow(processedRow, repeatCount);
-  });
+function getScaleFactor(input, output) {
+  return output.length / input.length;
 }
 
 /**
- * Orchestrates the tiling process to transform a 2x2 grid into a 6x6 grid.
- * @param {Array<Array<number>>} grid - The input 2x2 grid.
- * @returns {Array<Array<number>>} The transformed 6x6 grid.
+ * Orchestrates the tiling transformation.
+ * @param {Array<Array<number>>} grid - The input grid.
+ * @param {Array<Object>} training - The training set used to derive parameters.
+ * @returns {Array<Array<number>>} The transformed grid.
  */
-function solve(grid) {
-  const TOTAL_BLOCK_ROWS = 3;
-  const REPEAT_COUNT = 3;
-  let output = [];
+function solve(grid, training) {
+  const example = training[0];
+  const factor = getScaleFactor(example.input, example.output);
+  const rows = grid.length;
+  const output = [];
 
-  for (let blockIndex = 0; blockIndex < TOTAL_BLOCK_ROWS; blockIndex++) {
-    const block = processBlockRow(grid, blockIndex, REPEAT_COUNT);
-    output = output.concat(block);
+  for (let blockRow = 0; blockRow < factor; blockRow++) {
+    for (let i = 0; i < rows; i++) {
+      const sourceRow = (blockRow % 2 === 0) ? grid[i] : flipRow(grid[i]);
+      output.push(repeatRow(sourceRow, factor));
+    }
   }
 
   return output;
