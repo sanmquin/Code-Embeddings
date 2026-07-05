@@ -49,13 +49,16 @@ const TransformationScreen: React.FC<TransformationScreenProps> = ({
     }
   };
 
-  const Window: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
+  const Window: React.FC<{ title: string; children: React.ReactNode; flex?: number; minHeight?: string }> = ({ title, children, flex, minHeight }) => (
     <div style={{
       border: '1px solid #444',
       borderRadius: '6px',
       overflow: 'hidden',
-      marginBottom: '20px',
-      backgroundColor: '#1e1e1e'
+      backgroundColor: '#1e1e1e',
+      display: 'flex',
+      flexDirection: 'column',
+      flex: flex ?? 'none',
+      minHeight: minHeight ?? 'auto'
     }}>
       <div style={{
         backgroundColor: '#333',
@@ -67,47 +70,26 @@ const TransformationScreen: React.FC<TransformationScreenProps> = ({
       }}>
         {title}
       </div>
-      <div style={{ padding: '0' }}>
+      <div style={{ padding: '0', flex: 1, overflow: 'auto' }}>
         {children}
       </div>
     </div>
   );
 
   return (
-    <div className="transformation-screen">
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <Window title="Original Python Solution">
-            <pre style={{ margin: 0, borderRadius: 0 }}>{pythonSolution}</pre>
-          </Window>
+    <div className="transformation-screen" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '20px', minHeight: '400px' }}>
+        <Window title="Original Python Solution" flex={1}>
+          <pre style={{ margin: 0, borderRadius: 0, overflow: 'auto', maxHeight: '500px', padding: '12px' }}>{pythonSolution}</pre>
+        </Window>
 
-          <Window title="Feedback for LLM">
-            <textarea
-              value={feedback}
-              onChange={(e) => setFeedback(e.target.value)}
-              placeholder="Provide feedback to improve the refactored code..."
-              style={{
-                width: '100%',
-                minHeight: '150px',
-                backgroundColor: '#1e1e1e',
-                color: '#e0e0e0',
-                border: 'none',
-                padding: '12px',
-                fontSize: '1rem',
-                resize: 'vertical',
-                outline: 'none'
-              }}
-            />
-          </Window>
-        </div>
-
-        <Window title="Refactored JavaScript Code">
+        <Window title="Refactored JavaScript Code" flex={1}>
           {isLoading ? (
             <div style={{ padding: '20px' }}>
               <p>Refactoring...</p>
             </div>
           ) : transformedCode ? (
-            <pre style={{ margin: 0, borderRadius: 0 }}>{transformedCode}</pre>
+            <pre style={{ margin: 0, borderRadius: 0, overflow: 'auto', maxHeight: '500px', padding: '12px' }}>{transformedCode}</pre>
           ) : (
             <div style={{ padding: '20px' }}>
               <p>No refactored code yet. Click "Refactor" to start.</p>
@@ -115,6 +97,26 @@ const TransformationScreen: React.FC<TransformationScreenProps> = ({
           )}
         </Window>
       </div>
+
+      <Window title="Feedback for LLM">
+        <textarea
+          value={feedback}
+          onChange={(e) => setFeedback(e.target.value)}
+          placeholder="Provide feedback to improve the refactored code..."
+          style={{
+            width: '100%',
+            minHeight: '120px',
+            backgroundColor: '#1e1e1e',
+            color: '#e0e0e0',
+            border: 'none',
+            padding: '12px',
+            fontSize: '1rem',
+            resize: 'vertical',
+            outline: 'none',
+            boxSizing: 'border-box'
+          }}
+        />
+      </Window>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
