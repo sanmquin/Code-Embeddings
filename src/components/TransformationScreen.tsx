@@ -3,21 +3,22 @@ import React, { useState, useEffect } from 'react';
 interface TransformationScreenProps {
   pythonSolution: string;
   taskData: any;
-  onApprove: (code: string) => void;
+  refactoredCode: string;
+  onCodeChange: (code: string) => void;
 }
 
 const TransformationScreen: React.FC<TransformationScreenProps> = ({
   pythonSolution,
   taskData,
-  onApprove
+  refactoredCode,
+  onCodeChange
 }) => {
-  const [transformedCode, setTransformedCode] = useState<string>('');
   const [feedback, setFeedback] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setTransformedCode('');
+    onCodeChange('');
     setFeedback('');
   }, [pythonSolution]);
 
@@ -32,7 +33,7 @@ const TransformationScreen: React.FC<TransformationScreenProps> = ({
           solution: pythonSolution,
           taskData,
           feedback,
-          currentCode: transformedCode
+          currentCode: refactoredCode
         })
       });
 
@@ -41,7 +42,7 @@ const TransformationScreen: React.FC<TransformationScreenProps> = ({
       }
 
       const result = await response.json();
-      setTransformedCode(result.code);
+      onCodeChange(result.code);
     } catch (err: any) {
       setError('Transformation failed: ' + err.message);
     } finally {
@@ -87,8 +88,8 @@ const TransformationScreen: React.FC<TransformationScreenProps> = ({
           <div style={{ padding: '20px' }}>
             <p>Refactoring...</p>
           </div>
-        ) : transformedCode ? (
-          <pre style={{ margin: 0, borderRadius: 0, overflow: 'auto', maxHeight: '600px', padding: '12px' }}>{transformedCode}</pre>
+        ) : refactoredCode ? (
+          <pre style={{ margin: 0, borderRadius: 0, overflow: 'auto', maxHeight: '600px', padding: '12px' }}>{refactoredCode}</pre>
         ) : (
           <div style={{ padding: '20px' }}>
             <p>No refactored code yet. Click "Refactor" to start.</p>
@@ -120,13 +121,8 @@ const TransformationScreen: React.FC<TransformationScreenProps> = ({
 
       <div style={{ marginTop: '20px' }}>
         <button onClick={handleRefactor} disabled={isLoading}>
-          Refactor
+          {refactoredCode ? 'Refactor with Feedback' : 'Refactor'}
         </button>
-        {transformedCode && (
-          <button onClick={() => onApprove(transformedCode)} style={{ backgroundColor: '#4CAF50', color: 'white', marginLeft: '10px' }}>
-            Approve & Continue
-          </button>
-        )}
       </div>
     </div>
   );
