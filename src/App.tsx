@@ -6,7 +6,7 @@ import './index.css'
 
 function App() {
   const [screen, setScreen] = useState<'transformation' | 'execution' | 'publish'>('transformation')
-  const [approvedCode, setApprovedCode] = useState<string>('')
+  const [refactoredCode, setRefactoredCode] = useState<string>('')
   const [taskId, setTaskId] = useState<string>('00576224')
   const [pythonSolution, setPythonSolution] = useState<string>('')
   const [taskData, setTaskData] = useState<any>(null)
@@ -18,7 +18,7 @@ function App() {
   const loadTask = async (id: string) => {
     setIsLoading(true)
     setError(null)
-    setApprovedCode('')
+    setRefactoredCode('')
     setTestsPassed(false)
     setScreen('transformation')
 
@@ -79,11 +79,6 @@ function App() {
     loadTask(taskId)
   }, [])
 
-  const handleApprove = (code: string) => {
-    setApprovedCode(code)
-    setScreen('execution')
-  }
-
   return (
     <div className="app">
       <header>
@@ -138,7 +133,7 @@ function App() {
         </button>
         <button
           onClick={() => setScreen('execution')}
-          disabled={!approvedCode}
+          disabled={!refactoredCode}
           className={screen === 'execution' ? 'active' : ''}
         >
           2. Execute & Verify
@@ -157,16 +152,17 @@ function App() {
           <TransformationScreen
             pythonSolution={pythonSolution}
             taskData={taskData}
-            onApprove={handleApprove}
+            refactoredCode={refactoredCode}
+            onCodeChange={setRefactoredCode}
           />
         ) : screen === 'execution' ? (
           <ExecutionScreen
-            code={approvedCode}
+            code={refactoredCode}
             taskData={taskData}
             onTestsPassed={setTestsPassed}
           />
         ) : (
-          <PublishScreen taskId={taskId} code={approvedCode} />
+          <PublishScreen taskId={taskId} code={refactoredCode} />
         )}
       </main>
     </div>
