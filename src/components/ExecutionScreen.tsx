@@ -50,7 +50,7 @@ const ExecutionScreen: React.FC<ExecutionScreenProps> = ({ code, taskData, onTes
 
       const runCase = (caseData: any, type: 'train' | 'test', index: number) => {
         try {
-          const actual = solveFn(caseData.input);
+          const actual = solveFn(caseData.input, taskData.train);
           const passed = JSON.stringify(actual) === JSON.stringify(caseData.output);
           newResults.push({ index, type, passed, actual, expected: caseData.output, input: caseData.input });
         } catch (err: any) {
