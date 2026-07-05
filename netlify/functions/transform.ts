@@ -22,22 +22,24 @@ const handler: Handler = async (event) => {
 
     let prompt = `
       You are an expert software engineer specialized in ARC (Abstraction and Reasoning Corpus) challenges.
-      Transform the following Python solution into a modular, well-documented JavaScript library.
+
+      Use the following Python code as a starting point to a solution based on reusable JavaScript functions.
 
       Rules for the generated JavaScript:
-      1. **Modularity**: Break down the logic into small, single-purpose functions.
-      2. **Documentation**: Each function must have JSDoc comments explaining its purpose, parameters, and return value.
-      3. **No Magic**: Avoid hardcoded "magic" values. Use descriptive parameters.
-      4. **Type Safety**: Use JSDoc comments for type information. Do NOT use TypeScript-specific syntax like interfaces, type aliases, or type annotations on parameters/variables.
-      5. **Entry Point**: You MUST provide a 'solve(grid)' function that orchestrates the others.
-      6. **Browser Compatible**: Do not use Node.js specific APIs.
+      1. Modularity: Break down the logic into small, single-purpose functions.
+      2. Documentation: Each function must have JSDoc comments explaining its purpose, parameters, and return value.
+      3. Type Safety: Use JSDoc comments for type information. Do NOT use TypeScript-specific syntax like interfaces, type aliases, or type annotations on parameters/variables.
+      4. Entry Point: You MUST provide a 'solve(grid)' function that orchestrates the others.
+      5. Browser Compatible: Do not use Node.js specific APIs.
+
+      However, the Python solution often uses “MAGIC” parameters that are puzzle specific instead of generalizable solutions. In addition to the code, you will be provided with the puzzle, your task is to use the training data to convert any magic parameters into reusable functions.
 
       Python Solution:
       \`\`\`python
       ${solution}
       \`\`\`
 
-      ARC Task Data (for context):
+      ARC Task Data (puzzle):
       ${JSON.stringify(taskData, null, 2)}
     `;
 
