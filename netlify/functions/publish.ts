@@ -27,7 +27,7 @@ const handler: Handler = async (event) => {
 
     // 0. Extract modular functions and convert to TypeScript
     const genAI = new GoogleGenerativeAI(geminiApiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite' });
 
     const libraryPrompt = `
       You are an expert software engineer. I have a JavaScript solution for an ARC (Abstraction and Reasoning Corpus) task.
