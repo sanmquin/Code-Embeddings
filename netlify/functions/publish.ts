@@ -115,7 +115,7 @@ const handler: Handler = async (event) => {
     // Append new functions to README
     readmeContent += `\n### Task ${taskId}\n`;
     libraryFunctions.forEach(fn => {
-      readmeContent += `- **${fn.name}**: ${fn.description}\n`;
+      readmeContent += `- **${fn.name}_${taskId}**: ${fn.description}\n`;
     });
 
     // 3b. Create tree objects
@@ -133,7 +133,7 @@ const handler: Handler = async (event) => {
         content: readmeContent
       },
       ...libraryFunctions.map(fn => ({
-        path: `library/${fn.name}.ts`,
+        path: `library/${fn.name}_${taskId}.ts`,
         mode: '100644',
         type: 'blob',
         content: fn.code
