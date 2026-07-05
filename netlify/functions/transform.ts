@@ -12,7 +12,7 @@ const handler: Handler = async (event) => {
   }
 
   try {
-    const { solution, taskData } = JSON.parse(event.body || '{}');
+    const { solution, taskData, feedback, currentCode } = JSON.parse(event.body || '{}');
 
     const genAI = new GoogleGenerativeAI(apiKey);
     // Note: The user requested gemini-3.1-flash-lite, but we use gemini-1.5-flash as a fallback
@@ -20,7 +20,7 @@ const handler: Handler = async (event) => {
     const modelName = 'gemini-3.1-flash-lite';
     const model = genAI.getGenerativeModel({ model: modelName });
 
-    const prompt = `
+    let prompt = `
       You are an expert software engineer specialized in ARC (Abstraction and Reasoning Corpus) challenges.
       Transform the following Python solution into a modular, well-documented JavaScript library.
 
@@ -39,7 +39,35 @@ const handler: Handler = async (event) => {
 
       ARC Task Data (for context):
       ${JSON.stringify(taskData, null, 2)}
+    `;
 
+    if (feedback) {
+      if (currentCode) {
+        prompt += `
+
+      Existing JavaScript Implementation:
+      \`\`\`javascript
+      ${currentCode}
+      \`\`\`
+
+      User Feedback for the existing implementation:
+      "${feedback}"
+
+      Please provide an updated JavaScript implementation that addresses the feedback while following all the rules above.
+      The output should be the complete updated script.
+      `;
+      } else {
+        prompt += `
+
+      User Feedback for the initial implementation:
+      "${feedback}"
+
+      Please incorporate this feedback into the generated JavaScript code.
+      `;
+      }
+    }
+
+    prompt += `
       Response Format:
       Respond ONLY with a valid JSON object:
       {
