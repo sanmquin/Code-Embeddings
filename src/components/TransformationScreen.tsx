@@ -78,25 +78,23 @@ const TransformationScreen: React.FC<TransformationScreenProps> = ({
 
   return (
     <div className="transformation-screen" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '20px', minHeight: '400px' }}>
-        <Window title="Original Python Solution" flex={1}>
-          <pre style={{ margin: 0, borderRadius: 0, overflow: 'auto', maxHeight: '500px', padding: '12px' }}>{pythonSolution}</pre>
-        </Window>
+      <Window title="Original Python Solution">
+        <pre style={{ margin: 0, borderRadius: 0, overflow: 'auto', maxHeight: '400px', padding: '12px' }}>{pythonSolution}</pre>
+      </Window>
 
-        <Window title="Refactored JavaScript Code" flex={1}>
-          {isLoading ? (
-            <div style={{ padding: '20px' }}>
-              <p>Refactoring...</p>
-            </div>
-          ) : transformedCode ? (
-            <pre style={{ margin: 0, borderRadius: 0, overflow: 'auto', maxHeight: '500px', padding: '12px' }}>{transformedCode}</pre>
-          ) : (
-            <div style={{ padding: '20px' }}>
-              <p>No refactored code yet. Click "Refactor" to start.</p>
-            </div>
-          )}
-        </Window>
-      </div>
+      <Window title="Refactored JavaScript Code">
+        {isLoading ? (
+          <div style={{ padding: '20px' }}>
+            <p>Refactoring...</p>
+          </div>
+        ) : transformedCode ? (
+          <pre style={{ margin: 0, borderRadius: 0, overflow: 'auto', maxHeight: '600px', padding: '12px' }}>{transformedCode}</pre>
+        ) : (
+          <div style={{ padding: '20px' }}>
+            <p>No refactored code yet. Click "Refactor" to start.</p>
+          </div>
+        )}
+      </Window>
 
       <Window title="Feedback for LLM">
         <textarea
