@@ -14,11 +14,20 @@ function App() {
   const [error, setError] = useState<string | null>(null)
   const [debugInfo, setDebugInfo] = useState<{ pythonUrls: string[], jsonUrl: string } | null>(null)
   const [testsPassed, setTestsPassed] = useState<boolean>(false)
+  const [savedSolutions, setSavedSolutions] = useState<Record<string, string>>(() => {
+    const saved = localStorage.getItem('arc_solutions')
+    try {
+      return saved ? JSON.parse(saved) : {}
+    } catch (e) {
+      console.error('Failed to parse saved solutions:', e)
+      return {}
+    }
+  })
 
   const loadTask = async (id: string) => {
     setIsLoading(true)
     setError(null)
-    setRefactoredCode('')
+    setRefactoredCode(savedSolutions[id] || '')
     setTestsPassed(false)
     setScreen('transformation')
 
@@ -75,6 +84,13 @@ function App() {
     }
   }
 
+  const handleCodeChange = (newCode: string) => {
+    setRefactoredCode(newCode)
+    const updated = { ...savedSolutions, [taskId]: newCode }
+    setSavedSolutions(updated)
+    localStorage.setItem('arc_solutions', JSON.stringify(updated))
+  }
+
   useEffect(() => {
     loadTask(taskId)
   }, [])
@@ -96,6 +112,23 @@ function App() {
           <button onClick={() => loadTask(taskId)} disabled={isLoading}>
             {isLoading ? 'Loading...' : 'Load Puzzle'}
           </button>
+
+          {Object.keys(savedSolutions).length > 0 && (
+            <select
+              className="stored-solutions-select"
+              value={savedSolutions[taskId] ? taskId : ""}
+              onChange={(e) => {
+                const id = e.target.value;
+                setTaskId(id);
+                loadTask(id);
+              }}
+            >
+              <option value="" disabled>Stored Solutions</option>
+              {Object.keys(savedSolutions).map(id => (
+                <option key={id} value={id}>{id}</option>
+              ))}
+            </select>
+          )}
         </div>
         {error && (
           <div className="error-container">
@@ -153,7 +186,7 @@ function App() {
             pythonSolution={pythonSolution}
             taskData={taskData}
             refactoredCode={refactoredCode}
-            onCodeChange={setRefactoredCode}
+            onCodeChange={handleCodeChange}
           />
         ) : screen === 'execution' ? (
           <ExecutionScreen

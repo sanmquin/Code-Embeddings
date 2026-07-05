@@ -18,7 +18,6 @@ const TransformationScreen: React.FC<TransformationScreenProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    onCodeChange('');
     setFeedback('');
   }, [pythonSolution]);
 
