@@ -20,7 +20,7 @@ const handler: Handler = async (event) => {
   }
 
   try {
-    const { taskId, code } = JSON.parse(event.body || '{}');
+    const { taskId, code, documentation: userDocumentation } = JSON.parse(event.body || '{}');
     if (!taskId || !code) {
       return { statusCode: 400, body: JSON.stringify({ error: 'Missing taskId or code' }) };
     }
@@ -31,7 +31,9 @@ const handler: Handler = async (event) => {
 
     const libraryPrompt = `
       You are an expert software engineer. I have a JavaScript solution for an ARC (Abstraction and Reasoning Corpus) task.
-      Extract all individual modular helper functions from this code, EXCEPT the main 'solve' function.
+      Your task is two-fold:
+      1. Provide a detailed explanation of how the puzzle was solved based on the code logic.
+      2. Extract all individual modular helper functions from this code, EXCEPT the main 'solve' function.
 
       For each extracted function:
       1. Convert it to strictly typed TypeScript.
@@ -44,24 +46,29 @@ const handler: Handler = async (event) => {
       \`\`\`
 
       Response Format:
-      Respond ONLY with a valid JSON array of objects:
-      [
-        {
-          "name": "functionName",
-          "description": "A detailed description of what the function does.",
-          "code": "/* TypeScript code here */"
-        }
-      ]
+      Respond ONLY with a valid JSON object:
+      {
+        "summary": "Descriptive explanation of the solution logic.",
+        "functions": [
+          {
+            "name": "functionName",
+            "description": "A detailed description of what the function does.",
+            "code": "/* TypeScript code here */"
+          }
+        ]
+      }
     `;
 
     const geminiResult = await model.generateContent(libraryPrompt);
     const geminiResponse = await geminiResult.response;
     const geminiText = geminiResponse.text();
-    const jsonMatch = geminiText.match(/\[[\s\S]*\]/);
+    const jsonMatch = geminiText.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
     if (!jsonMatch) {
       throw new Error('Failed to parse function library from LLM response');
     }
-    const libraryFunctions: { name: string, description: string, code: string }[] = JSON.parse(jsonMatch[0]);
+    const geminiData = JSON.parse(jsonMatch[0]);
+    const libraryFunctions: { name: string, description: string, code: string }[] = Array.isArray(geminiData) ? geminiData : (geminiData.functions || []);
+    const solutionSummary: string = userDocumentation || geminiData.summary || 'No solution summary provided.';
 
     const branchName = `feat/solution-${taskId}`;
     const filePath = `solutions/${taskId}.js`;
@@ -100,7 +107,21 @@ const handler: Handler = async (event) => {
     }
 
     // 3. Create a tree with multiple files
-    // 3a. Get current library/README.md content
+    // 3a. Get current library/README.md and solutions/README.md content
+    const solutionsReadmePath = 'solutions/README.md';
+    const solutionsReadmeRes = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${solutionsReadmePath}?ref=main`, {
+      headers: { 'Authorization': `token ${githubToken}` }
+    });
+
+    let solutionsReadmeContent = '# Solutions\n\nDocumentation of ARC puzzle solutions.\n\n';
+    if (solutionsReadmeRes.ok) {
+      const solutionsReadmeData = await solutionsReadmeRes.json();
+      solutionsReadmeContent = Buffer.from(solutionsReadmeData.content, 'base64').toString('utf8');
+    }
+
+    // Append new solution summary to solutions/README.md
+    solutionsReadmeContent += `\n### Task ${taskId}\n${solutionSummary}\n`;
+
     const readmePath = 'library/README.md';
     const readmeRes = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${readmePath}?ref=main`, {
       headers: { 'Authorization': `token ${githubToken}` }
@@ -131,6 +152,12 @@ const handler: Handler = async (event) => {
         mode: '100644',
         type: 'blob',
         content: readmeContent
+      },
+      {
+        path: solutionsReadmePath,
+        mode: '100644',
+        type: 'blob',
+        content: solutionsReadmeContent
       },
       ...libraryFunctions.map(fn => ({
         path: `library/${taskId}_${fn.name}.ts`,
@@ -208,7 +235,7 @@ const handler: Handler = async (event) => {
         title: `Solution for Task ${taskId}`,
         head: branchName,
         base: 'main',
-        body: `This PR adds the refactored JavaScript solution for ARC task ${taskId}.`
+        body: `This PR adds the refactored JavaScript solution for ARC task ${taskId}.\n\n### Solution Summary\n${solutionSummary}`
       })
     });
 
