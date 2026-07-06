@@ -24,3 +24,8 @@ Modular functions for ARC puzzles.
 - **findBlocks**: Identifies and extracts connected components (blobs) of identical non-zero colors within a 2D grid using a Breadth-First Search (BFS) approach. Each component is represented as a block object containing its top-left coordinates, dimensions, and color. The resulting array is sorted by column and then row index.
 - **createEmptyGrid**: Initializes a 2D array of a specified size, filled with zeros, representing an empty workspace.
 - **placeBlocksDiagonally**: Places previously identified blocks into a grid in a sequential diagonal stack pattern. The algorithm updates current coordinates by adding the current block's dimensions (minus one) to the cursor, creating an overlapping diagonal placement.
+
+### Task 05a7bcf2
+- **cloneGrid**: Creates a deep copy of a 2D array of numbers to prevent mutation of the original grid structure.
+- **getBarrierInfo**: Scans the grid to identify a solid barrier line (represented by the value 8). Returns the barrier's orientation ('h' for horizontal, 'v' for vertical) and its index position.
+- **processVector**: Processes a 1D vector (representing a grid row or column) by projecting beams (value 4) relative to a barrier position. It converts markers to a secondary state (3), projects them through space, and pushes existing entities (value 2) to the boundaries.
