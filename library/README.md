@@ -29,3 +29,11 @@ Modular functions for ARC puzzles.
 - **cloneGrid**: Creates a deep copy of a 2D array of numbers to prevent mutation of the original grid structure.
 - **getBarrierInfo**: Scans the grid to identify a solid barrier line (represented by the value 8). Returns the barrier's orientation ('h' for horizontal, 'v' for vertical) and its index position.
 - **processVector**: Processes a 1D vector (representing a grid row or column) by projecting beams (value 4) relative to a barrier position. It converts markers to a secondary state (3), projects them through space, and pushes existing entities (value 2) to the boundaries.
+
+### Task 0607ce86
+- **findThreshold**: Calculates an optimal splitting threshold for an array of counts. It identifies the largest gap between consecutive unique sorted values to determine the most significant separation point between noise and structural signal.
+- **getBands**: Segments an array of counts into consecutive bands (start/end index pairs) where values meet or exceed a specified threshold.
+- **getMode**: Identifies the most frequent element (mode) in an array of numbers.
+- **extractTile**: Extracts a rectangular sub-matrix (tile) from a grid at a specified position and size.
+- **computeMajorityTile**: Generates a canonical template tile by performing a per-pixel majority vote across a collection of input tiles.
+- **reconstructGrid**: Rebuilds a full grid by stamping a canonical tile into all designated band intersections.
