@@ -44,6 +44,106 @@ header {
   border-color: #0074D9;
 }
 
+/* Top Navigation */
+.top-navigation {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid #333;
+  padding-bottom: 1rem;
+}
+
+.top-navigation button {
+  font-weight: bold;
+  font-size: 1.1rem;
+  padding: 0.8rem 2rem;
+  background-color: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  margin-right: 0;
+}
+
+.top-navigation button:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.top-navigation button.active {
+  border-bottom-color: #0074D9;
+  background-color: transparent;
+  color: #0074D9;
+}
+
+/* Library Screen */
+.library-screen {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.library-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.clusters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.cluster-card {
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  transition: transform 0.2s;
+}
+
+.cluster-card:hover {
+  transform: translateY(-5px);
+  border-color: #444;
+}
+
+.cluster-card h3 {
+  margin-top: 0;
+  color: #0074D9;
+  border-bottom: 1px solid #333;
+  padding-bottom: 0.5rem;
+}
+
+.cluster-description {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #ccc;
+  margin-bottom: 1rem;
+}
+
+.cluster-description p {
+  margin: 0.5rem 0;
+}
+
+.cluster-functions {
+  font-size: 0.85rem;
+  color: #888;
+  padding-top: 1rem;
+  border-top: 1px solid #333;
+}
+
+.readme-pre {
+  background-color: #0f0f0f;
+  border: 1px solid #222;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
 .error-message {
   color: #ff4136;
   margin-top: 10px;

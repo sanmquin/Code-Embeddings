@@ -1,0 +1,27 @@
+[
+  {
+    "id": "spatial-analysis",
+    "title": "Spatial Analysis & Object Detection",
+    "functions": ["findComponents", "getBounds", "findBlocks", "findDots", "getConnectedComponent", "getSurroundedCells", "findValueCoords", "getBarrierInfo", "findThreshold", "getPattern", "extractLines", "getBands"]
+  },
+  {
+    "id": "geometric-transformations",
+    "title": "Geometric Transformations",
+    "functions": ["flipRow", "repeatRow", "getScaleFactor", "cloneGrid", "extractTile", "createEmptyGrid"]
+  },
+  {
+    "id": "color-management",
+    "title": "Color & Value Management",
+    "functions": ["getBackgroundValue", "getFillerValue", "detectMarkerValue", "findPrimaryColor", "buildPatternMap", "getMarkerFromComponent", "getMode"]
+  },
+  {
+    "id": "synthesis-tiling",
+    "title": "Synthesis & Tiling",
+    "functions": ["applyTiling", "reconstructGrid", "placeBlocksDiagonally", "computeMajorityTile"]
+  },
+  {
+    "id": "drawing-filling",
+    "title": "Drawing & Filling",
+    "functions": ["renderLines", "drawSpiral", "fillRectangle", "calculateFillColor", "applyMarkers", "transformGrid", "processVector"]
+  }
+]
