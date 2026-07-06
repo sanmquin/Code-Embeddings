@@ -47,3 +47,7 @@ Modular functions for ARC puzzles.
 - **findDots**: Scans a 2D grid and groups the coordinates of all non-zero cells by their color value. Returns a mapping where keys are the color identifiers and values are arrays of [row, column] coordinate tuples.
 - **extractLines**: Analyzes grouped dot coordinates to determine if they form horizontal or vertical lines. Assumes each color has exactly two points. Horizontal lines share the same row index, while vertical lines share the same column index.
 - **renderLines**: Takes an existing grid and overlays horizontal and vertical line segments onto it by filling the specified coordinate ranges with the line's color. Returns a new grid with the modifications applied.
+
+### Task 08573cc6
+- **findValueCoords**: Scans a 2D integer grid to locate the first occurrence of a specified value. Returns the row and column indices as a tuple. If the value is not found, defaults to [0, 0].
+- **drawSpiral**: Generates a rectangular spiral pattern starting from the coordinates of the value '1' within the provided grid. It alternates between two colors based on a dynamically increasing path length.
