@@ -51,3 +51,11 @@ Modular functions for ARC puzzles.
 ### Task 08573cc6
 - **findValueCoords**: Scans a 2D integer grid to locate the first occurrence of a specified value. Returns the row and column indices as a tuple. If the value is not found, defaults to [0, 0].
 - **drawSpiral**: Generates a rectangular spiral pattern starting from the coordinates of the value '1' within the provided grid. It alternates between two colors based on a dynamically increasing path length.
+
+### Task 09c534e7
+- **getBackgroundValue**: Determines the background value of the grid, assuming the top-left corner defines the global background.
+- **getFillerValue**: Returns the default filler value, which is used as a placeholder or identity value for cells being processed.
+- **getConnectedComponent**: Uses Breadth-First Search (BFS) to identify all contiguous non-background cells starting from a specific coordinate, marking them as visited.
+- **getMarkerFromComponent**: Scans a component to find a pixel value that is neither the background nor the default filler, serving as a unique identifier/marker for the component.
+- **getSurroundedCells**: Identifies cells within a component that are 'fully surrounded' by non-background pixels, meaning none of the 8-neighbor cells are the background or out of bounds.
+- **applyMarkers**: Updates the provided result grid by setting the specified target cells to the marker value.
