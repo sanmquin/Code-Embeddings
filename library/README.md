@@ -12,3 +12,10 @@ Modular functions for ARC puzzles.
 - **getPattern**: Analyzes a 2D grid to extract a normalized 'pattern' string. It identifies all cells containing the value 1, calculates their top-left bounding box offset to normalize coordinates to (0,0), and returns a sorted, stringified representation of these relative coordinates.
 - **buildPatternMap**: Constructs a mapping between identified patterns (from inputs) and specific target colors (from outputs). It examines training examples to determine which non-0, non-1 color is associated with a specific structural pattern.
 - **transformGrid**: Performs a conditional transformation on a grid: replaces the value 8 with the specified target color, clears the value 1, and preserves all other existing values.
+
+### Task 00dbd492
+- **detectMarkerValue**: Analyzes the provided training set grids to identify the constant integer value used as the structural marker or frame for the objects within the ARC puzzle.
+- **findComponents**: Uses a Breadth-First Search (BFS) algorithm to group adjacent cells of the same marker value into distinct components, returning them as an array of coordinate sets.
+- **getBounds**: Calculates the axis-aligned bounding box (AABB) for a collection of points, providing the minimum and maximum row and column indices.
+- **calculateFillColor**: Determines an appropriate fill color integer based on the dimensions of the rectangle, using an inverse relationship logic standard in these transformation tasks.
+- **fillRectangle**: Fills the empty space (represented by 0) inside a specified rectangle boundary with a designated color.
