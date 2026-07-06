@@ -15,8 +15,7 @@ const handler: Handler = async (event) => {
     const { code, taskData } = JSON.parse(event.body || '{}');
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    // User requested gemini-3.1-flash-lite, using gemini-1.5-flash as a stable fallback
-    const modelName = 'gemini-1.5-flash';
+    const modelName = 'gemini-3.1-flash-lite';
     const model = genAI.getGenerativeModel({ model: modelName });
 
     const prompt = `
