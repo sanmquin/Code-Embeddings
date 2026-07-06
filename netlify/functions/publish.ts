@@ -32,7 +32,7 @@ const handler: Handler = async (event) => {
     const libraryPrompt = `
       You are an expert software engineer. I have a JavaScript solution for an ARC (Abstraction and Reasoning Corpus) task.
       Your task is two-fold:
-      1. Provide a concise summary of how the puzzle was solved based on the code logic.
+      1. Provide a detailed explanation of how the puzzle was solved based on the code logic.
       2. Extract all individual modular helper functions from this code, EXCEPT the main 'solve' function.
 
       For each extracted function:
@@ -48,7 +48,7 @@ const handler: Handler = async (event) => {
       Response Format:
       Respond ONLY with a valid JSON object:
       {
-        "summary": "Concise explanation of the solution logic.",
+        "summary": "Descriptive explanation of the solution logic.",
         "functions": [
           {
             "name": "functionName",
