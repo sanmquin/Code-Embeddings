@@ -1,4 +1,4 @@
-# Matrix
+# Code-Embeddings
 
 A web application library of JavaScript functions for solving [ARC-2](https://www.arcprize.org/) challenges.
 
