@@ -1,6 +1,6 @@
 export const GITHUB_OWNER = 'sanmquin';
 export const GITHUB_REPO = 'Matrix';
-export const GEMINI_MODEL = 'gemini-1.5-flash';
+export const GEMINI_MODEL = 'gemini-3.1-flash-lite';
 
 export const ARC_REPO_BASE = 'https://raw.githubusercontent.com/sanmquin/ARC/refs/heads/main';
 
