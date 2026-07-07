@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import TransformationScreen from './components/TransformationScreen'
 import ExecutionScreen from './components/ExecutionScreen'
 import PublishScreen from './components/PublishScreen'
+import { getArcPythonUrlPatterns, getArcJsonUrl } from './constants'
 import './index.css'
 
 function App() {
@@ -31,12 +32,8 @@ function App() {
     setTestsPassed(false)
     setScreen('transformation')
 
-    const pythonUrlPatterns = [
-      `https://raw.githubusercontent.com/sanmquin/ARC/refs/heads/main/solves/${id}/solver.py`,
-      `https://raw.githubusercontent.com/sanmquin/ARC/refs/heads/main/solves/${id}/solve.py`,
-      `https://raw.githubusercontent.com/sanmquin/ARC/refs/heads/main/solves/${id}.py`
-    ]
-    const jsonUrl = `https://raw.githubusercontent.com/sanmquin/ARC/refs/heads/main/dataset/tasks/${id}.json`
+    const pythonUrlPatterns = getArcPythonUrlPatterns(id)
+    const jsonUrl = getArcJsonUrl(id)
     setDebugInfo({ pythonUrls: pythonUrlPatterns, jsonUrl })
 
     try {
@@ -98,7 +95,7 @@ function App() {
   return (
     <div className="app">
       <header>
-        <h1>Code Embeddings</h1>
+        <h1>Matrix</h1>
         <p>Transforming ARC solutions into modular, reusable functions.</p>
 
         <div className="task-loader">

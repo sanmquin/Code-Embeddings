@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { GITHUB_OWNER, GITHUB_REPO } from '../constants';
 
 interface PublishScreenProps {
   taskId: string;
@@ -46,7 +47,7 @@ const PublishScreen: React.FC<PublishScreenProps> = ({ taskId, code }) => {
       <h3>3. Publish to GitHub</h3>
       <p>
         Your refactored solution has passed all tests. You can now publish it to the
-        <code>sanmquin/Code-Embeddings</code> repository by creating a Pull Request.
+        <code>{GITHUB_OWNER}/{GITHUB_REPO}</code> repository by creating a Pull Request.
       </p>
 
       <div style={{

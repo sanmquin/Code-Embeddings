@@ -1,8 +1,6 @@
 import { Handler } from '@netlify/functions';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-
-const OWNER = 'sanmquin';
-const REPO = 'Code-Embeddings';
+import { GITHUB_OWNER as OWNER, GITHUB_REPO as REPO, GEMINI_MODEL } from '../../src/constants';
 
 const handler: Handler = async (event) => {
   if (event.httpMethod !== 'POST') {
@@ -27,7 +25,7 @@ const handler: Handler = async (event) => {
 
     // 0. Extract modular functions and convert to TypeScript
     const genAI = new GoogleGenerativeAI(geminiApiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite' });
+    const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
 
     const libraryPrompt = `
       You are an expert software engineer. I have a JavaScript solution for an ARC (Abstraction and Reasoning Corpus) task.
