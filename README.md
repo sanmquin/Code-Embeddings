@@ -1,54 +1,58 @@
-# Coding-Embeddings
+# Code-Embeddings
 
-A web application library of Python functions for solving [ARC-2](https://www.arcprize.org/) challenges.
+A web application library of JavaScript functions for solving [ARC-2](https://www.arcprize.org/) challenges.
 
 ## Overview
 
-Coding-Embeddings is a project designed to build and maintain a curated library of reusable Python functions that can be leveraged to solve ARC-2 (Abstraction and Reasoning Corpus 2) challenges. The application provides a centralized hub for discovering, sharing, and organizing algorithmic solutions to complex pattern recognition and reasoning tasks.
+Matrix is a project designed to build and maintain a curated library of reusable JavaScript/TypeScript functions that can be leveraged to solve ARC-2 (Abstraction and Reasoning Corpus 2) challenges. The application provides a centralized hub for discovering, sharing, and organizing algorithmic solutions to complex pattern recognition and reasoning tasks.
 
 ## Features
 
-- **Function Library**: A comprehensive collection of Python functions tailored for ARC-2 problem-solving
-- **Web Interface**: User-friendly web application for browsing and managing functions
-- **Reusable Components**: Modular, well-documented functions designed for composition and reuse
-- **Challenge Solutions**: Solutions organized by problem type and difficulty level
+- **Function Library**: A comprehensive collection of TypeScript functions tailored for ARC-2 problem-solving.
+- **Web Interface**: User-friendly web application for refactoring Python solutions into modular JavaScript.
+- **Reusable Components**: Modular, well-documented functions designed for composition and reuse.
+- **Challenge Solutions**: Solutions organized by problem type and difficulty level.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Python 3.x
-- [Add other dependencies as needed]
+- Node.js (v18+)
+- npm
 
 ### Installation
 
 ```bash
-git clone https://github.com/sanmquin/Coding-Embeddings.git
-cd Coding-Embeddings
-pip install -r requirements.txt
+git clone https://github.com/sanmquin/Matrix.git
+cd Matrix
+npm install
 ```
 
 ### Running the Application
 
 ```bash
-# Add specific commands for running the web application
-python app.py
+npm run dev
 ```
 
 ## Project Structure
 
 ```
-Coding-Embeddings/
-├── src/              # Source code for the web application
-├── functions/        # Library of Python functions for ARC-2
-├── tests/            # Test suite
-├── docs/             # Documentation
+Matrix/
+├── src/              # Source code for the web application (React/TS)
+├── netlify/functions # Backend serverless functions (Gemini/GitHub integration)
+├── library/          # Extracted modular TypeScript functions
+├── solutions/        # Refactored JavaScript solutions
+├── tests/            # Test suite (Playwright)
 └── README.md         # This file
 ```
 
 ## Usage
 
-[Add examples of how to use the function library and web application]
+1. Enter an ARC Task ID.
+2. Review the original Python solution.
+3. Use the LLM-powered refactor tool to convert it to modular JavaScript.
+4. Verify the solution against the training and test data.
+5. Publish to the GitHub repository to create a Pull Request with the solution and modular library functions.
 
 ## ARC-2 Challenges
 
@@ -65,14 +69,13 @@ Contributions are welcome! Please follow these guidelines:
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/my-new-function`)
-3. Add your function with tests and documentation
-4. Commit your changes (`git commit -am 'Add new function'`)
-5. Push to the branch (`git push origin feature/my-new-function`)
-6. Open a Pull Request
+3. Commit your changes (`git commit -am 'Add new function'`)
+4. Push to the branch (`git push origin feature/my-new-function`)
+5. Open a Pull Request
 
 ## License
 
-[Add license information - consider adding MIT, Apache 2.0, or other appropriate license]
+MIT
 
 ## Resources
 
@@ -85,4 +88,4 @@ For questions or suggestions, please open an issue or contact [@sanmquin](https:
 
 ---
 
-**Status**: Early development phase
+**Status**: Active development phase
