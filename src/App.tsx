@@ -95,7 +95,7 @@ function App() {
   return (
     <div className="app">
       <header>
-        <h1>Matrix</h1>
+        <h1>Code-Embeddings</h1>
         <p>Transforming ARC solutions into modular, reusable functions.</p>
 
         <div className="task-loader">
