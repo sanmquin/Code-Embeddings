@@ -1,4 +1,4 @@
-# GitHub Setup for Code-Embeddings
+# GitHub Setup for Matrix
 
 To enable the "Publish to GitHub" feature, you need to provide a GitHub Personal Access Token (PAT) with appropriate permissions.
 
@@ -7,7 +7,7 @@ To enable the "Publish to GitHub" feature, you need to provide a GitHub Personal
 1.  Log in to your GitHub account.
 2.  Navigate to **Settings** > **Developer settings** > **Personal access tokens** > **Tokens (classic)**.
 3.  Click **Generate new token** > **Generate new token (classic)**.
-4.  Give your token a descriptive **Note** (e.g., "Code-Embeddings Publisher").
+4.  Give your token a descriptive **Note** (e.g., "Matrix Publisher").
 5.  Select the **repo** scope. This allows the application to:
     -   Read repository data.
     -   Create branches.

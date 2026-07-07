@@ -1,5 +1,6 @@
 import { Handler } from '@netlify/functions';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GEMINI_MODEL } from '../../src/constants';
 
 const handler: Handler = async (event) => {
   if (event.httpMethod !== 'POST') {
@@ -15,10 +16,7 @@ const handler: Handler = async (event) => {
     const { solution, taskData, feedback, currentCode } = JSON.parse(event.body || '{}');
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    // Note: The user requested gemini-3.1-flash-lite, but we use gemini-1.5-flash as a fallback
-    // because gemini-3.1-flash-lite is not widely available/documented as a public model ID yet.
-    const modelName = 'gemini-3.1-flash-lite';
-    const model = genAI.getGenerativeModel({ model: modelName });
+    const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
 
     let prompt = `
       You are an expert software engineer specialized in ARC (Abstraction and Reasoning Corpus) challenges.
