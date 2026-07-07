@@ -11,6 +11,7 @@ const PublishScreen: React.FC<PublishScreenProps> = ({ taskId, code }) => {
   const [prUrl, setPrUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string>('');
+  const [documentation, setDocumentation] = useState<string>('');
 
   const handlePublish = async () => {
     setIsPublishing(true);
@@ -23,7 +24,7 @@ const PublishScreen: React.FC<PublishScreenProps> = ({ taskId, code }) => {
       const response = await fetch('/.netlify/functions/publish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ taskId, code })
+        body: JSON.stringify({ taskId, code, documentation })
       });
 
       const result = await response.json();
@@ -57,6 +58,27 @@ const PublishScreen: React.FC<PublishScreenProps> = ({ taskId, code }) => {
         border: '1px solid #444',
         margin: '20px 0'
       }}>
+        <div style={{ marginBottom: '20px' }}>
+          <h4 style={{ margin: '0 0 10px 0' }}>Solution Documentation:</h4>
+          <textarea
+            value={documentation}
+            onChange={(e) => setDocumentation(e.target.value)}
+            placeholder="Briefly explain how the puzzle was solved (optional, LLM will generate if empty)..."
+            style={{
+              width: '100%',
+              minHeight: '80px',
+              backgroundColor: '#252525',
+              color: '#e0e0e0',
+              border: '1px solid #444',
+              padding: '10px',
+              borderRadius: '4px',
+              fontSize: '0.9rem',
+              resize: 'vertical',
+              boxSizing: 'border-box'
+            }}
+          />
+        </div>
+
         <h4>Publishing Details:</h4>
         <ul style={{ listStyle: 'none', padding: 0 }}>
           <li><strong>Branch:</strong> <code>feat/solution-{taskId}</code></li>
