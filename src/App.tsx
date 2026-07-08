@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react'
 import TransformationScreen from './components/TransformationScreen'
 import ExecutionScreen from './components/ExecutionScreen'
 import PublishScreen from './components/PublishScreen'
+import LibraryScreen from './components/LibraryScreen'
 import { getArcPythonUrlPatterns, getArcJsonUrl } from './constants'
 import './index.css'
 
 function App() {
+  const [mainTab, setMainTab] = useState<'training' | 'library'>('training')
   const [screen, setScreen] = useState<'transformation' | 'execution' | 'publish'>('transformation')
   const [refactoredCode, setRefactoredCode] = useState<string>('')
   const [taskId, setTaskId] = useState<string>('00576224')
@@ -94,107 +96,128 @@ function App() {
 
   return (
     <div className="app">
-      <header>
-        <h1>Code-Embeddings</h1>
-        <p>Transforming ARC solutions into modular, reusable functions.</p>
-
-        <div className="task-loader">
-          <input
-            type="text"
-            value={taskId}
-            onChange={(e) => setTaskId(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && loadTask(taskId)}
-            placeholder="Enter Task ID (e.g. 00576224)"
-          />
-          <button onClick={() => loadTask(taskId)} disabled={isLoading}>
-            {isLoading ? 'Loading...' : 'Load Puzzle'}
-          </button>
-
-          {Object.keys(savedSolutions).length > 0 && (
-            <select
-              className="stored-solutions-select"
-              value={savedSolutions[taskId] ? taskId : ""}
-              onChange={(e) => {
-                const id = e.target.value;
-                setTaskId(id);
-                loadTask(id);
-              }}
-            >
-              <option value="" disabled>Stored Solutions</option>
-              {Object.keys(savedSolutions).map(id => (
-                <option key={id} value={id}>{id}</option>
-              ))}
-            </select>
-          )}
-        </div>
-        {error && (
-          <div className="error-container">
-            <div className="error-message">{error}</div>
-            {debugInfo && (
-              <div className="debug-info">
-                <p><strong>Debug Info:</strong></p>
-                <div>
-                  <p>Attempted Python URLs:</p>
-                  <ul>
-                    {debugInfo.pythonUrls.map(url => (
-                      <li key={url}><a href={url} target="_blank" rel="noreferrer">{url}</a></li>
-                    ))}
-                  </ul>
-                </div>
-                <div style={{ marginTop: '10px' }}>
-                  <p>Attempted JSON URL:</p>
-                  <ul>
-                    <li><a href={debugInfo.jsonUrl} target="_blank" rel="noreferrer">{debugInfo.jsonUrl}</a></li>
-                  </ul>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </header>
-
-      <nav>
+      <nav className="main-nav">
         <button
-          onClick={() => setScreen('transformation')}
-          className={screen === 'transformation' ? 'active' : ''}
-          disabled={!pythonSolution}
+          onClick={() => setMainTab('training')}
+          className={mainTab === 'training' ? 'active' : ''}
         >
-          1. Refactor Solution
+          Training Data
         </button>
         <button
-          onClick={() => setScreen('execution')}
-          disabled={!refactoredCode}
-          className={screen === 'execution' ? 'active' : ''}
+          onClick={() => setMainTab('library')}
+          className={mainTab === 'library' ? 'active' : ''}
         >
-          2. Execute & Verify
-        </button>
-        <button
-          onClick={() => setScreen('publish')}
-          disabled={!testsPassed}
-          className={screen === 'publish' ? 'active' : ''}
-        >
-          3. Publish to GitHub
+          Library
         </button>
       </nav>
 
-      <main>
-        {screen === 'transformation' ? (
-          <TransformationScreen
-            pythonSolution={pythonSolution}
-            taskData={taskData}
-            refactoredCode={refactoredCode}
-            onCodeChange={handleCodeChange}
-          />
-        ) : screen === 'execution' ? (
-          <ExecutionScreen
-            code={refactoredCode}
-            taskData={taskData}
-            onTestsPassed={setTestsPassed}
-          />
-        ) : (
-          <PublishScreen taskId={taskId} code={refactoredCode} />
-        )}
-      </main>
+      {mainTab === 'training' ? (
+        <>
+          <header>
+            <h1>Code-Embeddings</h1>
+            <p>Transforming ARC solutions into modular, reusable functions.</p>
+
+            <div className="task-loader">
+              <input
+                type="text"
+                value={taskId}
+                onChange={(e) => setTaskId(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && loadTask(taskId)}
+                placeholder="Enter Task ID (e.g. 00576224)"
+              />
+              <button onClick={() => loadTask(taskId)} disabled={isLoading}>
+                {isLoading ? 'Loading...' : 'Load Puzzle'}
+              </button>
+
+              {Object.keys(savedSolutions).length > 0 && (
+                <select
+                  className="stored-solutions-select"
+                  value={savedSolutions[taskId] ? taskId : ""}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    setTaskId(id);
+                    loadTask(id);
+                  }}
+                >
+                  <option value="" disabled>Stored Solutions</option>
+                  {Object.keys(savedSolutions).map(id => (
+                    <option key={id} value={id}>{id}</option>
+                  ))}
+                </select>
+              )}
+            </div>
+            {error && (
+              <div className="error-container">
+                <div className="error-message">{error}</div>
+                {debugInfo && (
+                  <div className="debug-info">
+                    <p><strong>Debug Info:</strong></p>
+                    <div>
+                      <p>Attempted Python URLs:</p>
+                      <ul>
+                        {debugInfo.pythonUrls.map(url => (
+                          <li key={url}><a href={url} target="_blank" rel="noreferrer">{url}</a></li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div style={{ marginTop: '10px' }}>
+                      <p>Attempted JSON URL:</p>
+                      <ul>
+                        <li><a href={debugInfo.jsonUrl} target="_blank" rel="noreferrer">{debugInfo.jsonUrl}</a></li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </header>
+
+          <nav>
+            <button
+              onClick={() => setScreen('transformation')}
+              className={screen === 'transformation' ? 'active' : ''}
+              disabled={!pythonSolution}
+            >
+              1. Refactor Solution
+            </button>
+            <button
+              onClick={() => setScreen('execution')}
+              disabled={!refactoredCode}
+              className={screen === 'execution' ? 'active' : ''}
+            >
+              2. Execute & Verify
+            </button>
+            <button
+              onClick={() => setScreen('publish')}
+              disabled={!testsPassed}
+              className={screen === 'publish' ? 'active' : ''}
+            >
+              3. Publish to GitHub
+            </button>
+          </nav>
+
+          <main>
+            {screen === 'transformation' ? (
+              <TransformationScreen
+                pythonSolution={pythonSolution}
+                taskData={taskData}
+                refactoredCode={refactoredCode}
+                onCodeChange={handleCodeChange}
+              />
+            ) : screen === 'execution' ? (
+              <ExecutionScreen
+                code={refactoredCode}
+                taskData={taskData}
+                onTestsPassed={setTestsPassed}
+              />
+            ) : (
+              <PublishScreen taskId={taskId} code={refactoredCode} />
+            )}
+          </main>
+        </>
+      ) : (
+        <LibraryScreen />
+      )}
     </div>
   )
 }

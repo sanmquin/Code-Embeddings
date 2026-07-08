@@ -78,6 +78,37 @@ nav {
   margin-bottom: 2rem;
 }
 
+.main-nav {
+  display: flex;
+  justify-content: center;
+  border-bottom: 2px solid #333;
+  padding-bottom: 1rem;
+  margin-bottom: 2rem;
+}
+
+.main-nav button {
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  font-weight: bold;
+  padding: 0.5rem 1.5rem;
+  margin: 0;
+  border-radius: 0;
+  border-bottom: 3px solid transparent;
+  color: #888;
+}
+
+.main-nav button:hover {
+  color: #fff;
+  background: transparent;
+}
+
+.main-nav button.active {
+  color: #0074D9;
+  border-bottom-color: #0074D9;
+  background: transparent;
+}
+
 button {
   margin-right: 1rem;
   padding: 0.6rem 1.2rem;
@@ -151,4 +182,93 @@ th {
 .stored-solutions-select:focus {
   outline: none;
   border-color: #0074D9;
+}
+
+/* Library Screen Styles */
+.library-screen {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.library-actions {
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: center;
+}
+
+.library-actions button {
+  background-color: #2ecc40;
+  color: white;
+  border: none;
+  font-weight: bold;
+  padding: 0.8rem 2rem;
+}
+
+.library-actions button:hover:not(:disabled) {
+  background-color: #27ae3f;
+}
+
+.library-actions button.loading {
+  background-color: #555;
+  cursor: wait;
+}
+
+.readme-pre {
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+  padding: 1.5rem;
+  max-height: none;
+}
+
+.clusters-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+  gap: 2rem;
+}
+
+.cluster-card {
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+.cluster-card h3 {
+  margin-top: 0;
+  color: #0074D9;
+  border-bottom: 1px solid #333;
+  padding-bottom: 0.5rem;
+}
+
+.cluster-description {
+  line-height: 1.6;
+  color: #ccc;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+}
+
+.cluster-examples h4 {
+  font-size: 0.9rem;
+  color: #888;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.cluster-examples ul {
+  padding-left: 1.2rem;
+  margin: 0;
+}
+
+.cluster-examples li {
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.cluster-examples li strong {
+  color: #ffdc00;
 }
