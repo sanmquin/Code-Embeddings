@@ -13,7 +13,7 @@ const handler: Handler = async (event) => {
   }
 
   try {
-    const { readme } = JSON.parse(event.body || '{}');
+    const { readme, type = 'functions' } = JSON.parse(event.body || '{}');
 
     if (!readme) {
       return { statusCode: 400, body: 'Missing readme content' };
@@ -22,17 +22,19 @@ const handler: Handler = async (event) => {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
 
+    const isSolutions = type === 'solutions';
+
     const prompt = `
       You are an expert software engineer and data scientist.
-      I will provide you with a README file that contains a list of modular functions used to solve ARC (Abstraction and Reasoning Corpus) puzzles.
-      Your task is to cluster these functions into logical groups (clusters) based on their functionality and purpose.
+      I will provide you with a file containing ARC (Abstraction and Reasoning Corpus) puzzle ${isSolutions ? 'solutions' : 'modular functions'}.
+      Your task is to cluster these ${isSolutions ? 'solutions' : 'functions'} into logical groups (clusters) based on their logic, methodology, or purpose.
 
       For each cluster, provide:
       1. A concise and descriptive Title.
-      2. A lengthy, detailed Description explaining what kinds of problems this cluster of functions addresses and how they work together.
-      3. A list of Examples from the README that belong to this cluster. Each example should include the function name and a brief summary of what it does.
+      2. A lengthy, detailed Description explaining what kinds of puzzles or problems this cluster addresses and how the ${isSolutions ? 'solutions' : 'functions'} in it work.
+      3. A list of Examples from the content that belong to this cluster. Each example should include the ${isSolutions ? 'Task ID or Solution Name' : 'function name'} and a brief summary of what it does / how it solves it.
 
-      README content:
+      Content to cluster:
       ${readme}
 
       Respond ONLY with a valid JSON object in the following format:
@@ -43,8 +45,8 @@ const handler: Handler = async (event) => {
             "description": "Lengthy description of the cluster...",
             "examples": [
               {
-                "name": "functionName",
-                "description": "What the function does"
+                "name": "${isSolutions ? 'Task XXXXXXXX' : 'functionName'}",
+                "description": "What the ${isSolutions ? 'solution' : 'function'} does / how it is solved"
               }
             ]
           }

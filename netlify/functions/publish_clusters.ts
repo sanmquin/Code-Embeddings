@@ -12,9 +12,12 @@ interface Cluster {
   examples: Example[];
 }
 
-const renderClustersToMarkdown = (clusters: Cluster[]): string => {
-  let md = '# Function Clusters\n\n';
-  md += 'This file contains logical groupings of modular functions used to solve ARC puzzles.\n\n';
+const renderClustersToMarkdown = (clusters: Cluster[], type: string): string => {
+  const isSolutions = type === 'solutions';
+  let md = isSolutions ? '# Solution Clusters\n\n' : '# Function Clusters\n\n';
+  md += isSolutions
+    ? 'This file contains logical groupings of full ARC puzzle solutions.\n\n'
+    : 'This file contains logical groupings of modular functions used to solve ARC puzzles.\n\n';
 
   clusters.forEach((cluster) => {
     md += `## ${cluster.title}\n\n`;
@@ -40,15 +43,16 @@ const handler: Handler = async (event) => {
   }
 
   try {
-    const { clusters } = JSON.parse(event.body || '{}');
+    const { clusters, type = 'functions' } = JSON.parse(event.body || '{}');
 
     if (!clusters || !Array.isArray(clusters)) {
       return { statusCode: 400, body: JSON.stringify({ error: 'Missing or invalid clusters data' }) };
     }
 
-    const markdownContent = renderClustersToMarkdown(clusters);
-    const branchName = 'feat/update-clusters';
-    const filePath = 'CLUSTERS.md';
+    const markdownContent = renderClustersToMarkdown(clusters, type);
+    const isSolutions = type === 'solutions';
+    const branchName = isSolutions ? 'feat/update-solutions-clusters' : 'feat/update-clusters';
+    const filePath = isSolutions ? 'solutions.md' : 'CLUSTERS.md';
 
     // 1. Get the SHA of the main branch
     const mainBranchRes = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/git/ref/heads/main`, {
@@ -119,7 +123,7 @@ const handler: Handler = async (event) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        message: 'Update function clusters documentation',
+        message: isSolutions ? 'Update ARC solutions clusters documentation' : 'Update function clusters documentation',
         tree: treeData.sha,
         parents: [mainSha]
       })
@@ -157,10 +161,12 @@ const handler: Handler = async (event) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        title: 'Update Function Clusters',
+        title: isSolutions ? 'Update ARC Solutions Clusters' : 'Update Function Clusters',
         head: branchName,
         base: 'main',
-        body: 'This PR updates the function clusters documentation in CLUSTERS.md based on recent analysis.'
+        body: isSolutions
+          ? 'This PR updates the ARC solutions clusters documentation in solutions.md based on recent analysis.'
+          : 'This PR updates the function clusters documentation in CLUSTERS.md based on recent analysis.'
       })
     });
 
