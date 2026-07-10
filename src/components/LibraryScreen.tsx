@@ -16,6 +16,8 @@ const LibraryScreen: React.FC = () => {
   const [clusters, setClusters] = useState<Cluster[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isClustering, setIsClustering] = useState<boolean>(false);
+  const [isPublishing, setIsPublishing] = useState<boolean>(false);
+  const [publishUrl, setPublishUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -42,6 +44,7 @@ const LibraryScreen: React.FC = () => {
   const handleCluster = async () => {
     setIsClustering(true);
     setError(null);
+    setPublishUrl(null);
     try {
       const response = await fetch('/.netlify/functions/cluster', {
         method: 'POST',
@@ -63,6 +66,31 @@ const LibraryScreen: React.FC = () => {
     }
   };
 
+  const handlePublishClusters = async () => {
+    if (clusters.length === 0) return;
+    setIsPublishing(true);
+    setError(null);
+    try {
+      const response = await fetch('/.netlify/functions/publish_clusters', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clusters }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to publish clusters');
+      }
+
+      const data = await response.json();
+      setPublishUrl(data.prUrl);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
   return (
     <div className="library-screen">
       <h2>Matrix Function Library</h2>
@@ -78,7 +106,23 @@ const LibraryScreen: React.FC = () => {
         >
           {isClustering ? 'Clustering...' : 'Cluster Functions (AI)'}
         </button>
+
+        {clusters.length > 0 && (
+          <button
+            onClick={handlePublishClusters}
+            disabled={isPublishing}
+            className={isPublishing ? 'loading' : ''}
+          >
+            {isPublishing ? 'Publishing...' : 'Publish Clusters to GitHub'}
+          </button>
+        )}
       </div>
+
+      {publishUrl && (
+        <div className="success-message" style={{ marginBottom: '1rem' }}>
+          Clusters published! View Pull Request: <a href={publishUrl} target="_blank" rel="noopener noreferrer">{publishUrl}</a>
+        </div>
+      )}
 
       <div className="library-content">
         {clusters.length > 0 ? (
