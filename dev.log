@@ -1,0 +1,13 @@
+
+> matrix@0.0.0 dev
+> vite
+
+
+  VITE v5.4.21  ready in 297 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+2:04:24 AM [vite] hmr update /src/components/TransformationScreen.tsx
+2:04:49 AM [vite] hmr update /src/components/TransformationScreen.tsx
+2:04:56 AM [vite] hmr update /src/components/TransformationScreen.tsx
+2:05:19 AM [vite] hmr update /src/App.tsx

@@ -132,6 +132,7 @@ function App() {
 
   const handleCodeChange = (newCode: string) => {
     setRefactoredCode(newCode)
+    setTestsPassed(false)
     const updated = { ...savedSolutions, [taskId]: newCode }
     setSavedSolutions(updated)
     localStorage.setItem('arc_solutions', JSON.stringify(updated))
