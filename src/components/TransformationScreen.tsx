@@ -124,6 +124,14 @@ const TransformationScreen: React.FC<TransformationScreenProps> = ({
     }
   };
 
+  const handleReset = () => {
+    if (window.confirm('Are you sure you want to reset this solution and start from scratch? All your current changes for this puzzle will be lost.')) {
+      onCodeChange('');
+      setJudgeResult(null);
+      setFeedback('');
+    }
+  };
+
   return (
     <div className="transformation-screen" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <Window title="Original Python Solution">
@@ -135,9 +143,29 @@ const TransformationScreen: React.FC<TransformationScreenProps> = ({
           <div style={{ padding: '20px' }}>
             <p>Refactoring...</p>
           </div>
-        ) : refactoredCode ? (
+        ) : (
           <>
-            <pre style={{ margin: 0, borderRadius: 0, overflow: 'auto', maxHeight: '600px', padding: '12px' }}>{refactoredCode}</pre>
+            <textarea
+              value={refactoredCode}
+              onChange={(e) => onCodeChange(e.target.value)}
+              placeholder="Write your JavaScript/TypeScript solution here, or click 'Refactor' to let the LLM generate one..."
+              style={{
+                width: '100%',
+                height: '400px',
+                backgroundColor: '#1e1e1e',
+                color: '#e0e0e0',
+                border: 'none',
+                padding: '12px',
+                fontFamily: 'Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace',
+                fontSize: '0.95rem',
+                lineHeight: '1.5',
+                resize: 'vertical',
+                outline: 'none',
+                boxSizing: 'border-box',
+                whiteSpace: 'pre',
+                overflow: 'auto'
+              }}
+            />
             {judgeResult && (
               <div style={{ padding: '16px', borderTop: '1px solid #444', backgroundColor: '#252525' }}>
                 <h4 style={{ margin: '0 0 12px 0', color: '#fff' }}>Judge Checklist</h4>
@@ -166,10 +194,6 @@ const TransformationScreen: React.FC<TransformationScreenProps> = ({
               </div>
             )}
           </>
-        ) : (
-          <div style={{ padding: '20px' }}>
-            <p>No refactored code yet. Click "Refactor" to start.</p>
-          </div>
         )}
       </Window>
 
@@ -206,6 +230,15 @@ const TransformationScreen: React.FC<TransformationScreenProps> = ({
             style={{ backgroundColor: '#4a4a4a' }}
           >
             {isJudging ? 'Judging...' : 'Judge Code'}
+          </button>
+        )}
+        {refactoredCode && (
+          <button
+            onClick={handleReset}
+            disabled={isLoading || isJudging}
+            style={{ backgroundColor: '#cc3333', marginLeft: 'auto' }}
+          >
+            Reset Solution
           </button>
         )}
       </div>
