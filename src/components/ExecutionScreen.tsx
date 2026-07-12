@@ -61,8 +61,9 @@ const ExecutionScreen: React.FC<ExecutionScreenProps> = ({ code, taskData, onTes
       taskData.train.forEach((ex: any, i: number) => runCase(ex, 'train', i));
       taskData.test.forEach((ex: any, i: number) => runCase(ex, 'test', i));
 
-      const allPassed = newResults.length > 0 && newResults.every(r => r.passed);
-      onTestsPassed(allPassed);
+      const testCases = newResults.filter(r => r.type === 'test');
+      const testCasesPassed = testCases.length > 0 && testCases.every(r => r.passed);
+      onTestsPassed(testCasesPassed);
 
     } catch (err: any) {
       console.error('Failed to execute code', err);
