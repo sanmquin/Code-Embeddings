@@ -1,10 +1,15 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import TransformationScreen from './components/TransformationScreen'
 import ExecutionScreen from './components/ExecutionScreen'
 import PublishScreen from './components/PublishScreen'
 import LibraryScreen from './components/LibraryScreen'
 import { getArcPythonUrlPatterns, getArcJsonUrl } from './constants'
 import './index.css'
+
+// @ts-ignore
+import v2SetRaw from '../data/v2_public_evaluation_set.json.txt?raw'
+
+const v2Set: string[] = JSON.parse(v2SetRaw)
 
 function App() {
   const [mainTab, setMainTab] = useState<'training' | 'library'>('training')
@@ -17,6 +22,24 @@ function App() {
   const [error, setError] = useState<string | null>(null)
   const [debugInfo, setDebugInfo] = useState<{ pythonUrls: string[], jsonUrl: string } | null>(null)
   const [testsPassed, setTestsPassed] = useState<boolean>(false)
+  const [failedPuzzles, setFailedPuzzles] = useState<Set<string>>(new Set())
+  const [showDropdown, setShowDropdown] = useState<boolean>(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setShowDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
+  const searchTerm = taskId.trim().toLowerCase()
+  const filteredPuzzles = v2Set.filter(id => id.toLowerCase().includes(searchTerm))
   const [savedSolutions, setSavedSolutions] = useState<Record<string, string>>(() => {
     const saved = localStorage.getItem('arc_solutions')
     try {
@@ -72,12 +95,24 @@ function App() {
       }
 
       setPythonSolution(pythonCode)
+      setFailedPuzzles(prev => {
+        if (!prev.has(id)) return prev
+        const next = new Set(prev)
+        next.delete(id)
+        return next
+      })
     } catch (err: any) {
       setError(err.message)
       setPythonSolution('')
       // Don't necessarily clear taskData if JSON was loaded but Python failed,
       // but the app needs both to proceed anyway.
       setTaskData(null)
+      setFailedPuzzles(prev => {
+        if (prev.has(id)) return prev
+        const next = new Set(prev)
+        next.add(id)
+        return next
+      })
     } finally {
       setIsLoading(false)
     }
@@ -118,13 +153,61 @@ function App() {
             <p>Transforming ARC solutions into modular, reusable functions.</p>
 
             <div className="task-loader">
-              <input
-                type="text"
-                value={taskId}
-                onChange={(e) => setTaskId(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && loadTask(taskId)}
-                placeholder="Enter Task ID (e.g. 00576224)"
-              />
+              <div className="puzzle-selector-container" ref={containerRef}>
+                <input
+                  type="text"
+                  value={taskId}
+                  onChange={(e) => {
+                    setTaskId(e.target.value)
+                    setShowDropdown(true)
+                  }}
+                  onFocus={() => setShowDropdown(true)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      loadTask(taskId)
+                      setShowDropdown(false)
+                    } else if (e.key === 'Escape') {
+                      setShowDropdown(false)
+                    }
+                  }}
+                  placeholder="Enter Task ID (e.g. 00576224)"
+                />
+
+                {showDropdown && (
+                  <ul className="puzzle-dropdown-list">
+                    {filteredPuzzles.length > 0 ? (
+                      filteredPuzzles.map((id) => {
+                        const isSolved = !!savedSolutions[id]
+                        const isFailed = failedPuzzles.has(id)
+                        return (
+                          <li
+                            key={id}
+                            className={`puzzle-dropdown-item ${id === taskId ? 'selected' : ''}`}
+                            onClick={() => {
+                              setTaskId(id)
+                              loadTask(id)
+                              setShowDropdown(false)
+                            }}
+                          >
+                            <span className="puzzle-id-text">{id}</span>
+                            <div className="puzzle-status-icons">
+                              {isSolved && (
+                                <span className="status-icon solved-icon" title="Solved">✓</span>
+                              )}
+                              {isFailed && (
+                                <span className="status-icon failed-icon" title="Failed to load">✗</span>
+                              )}
+                            </div>
+                          </li>
+                        )
+                      })
+                    ) : (
+                      <li className="puzzle-dropdown-no-matches">No matching puzzles</li>
+                    )}
+                  </ul>
+                )}
+              </div>
+
               <button onClick={() => loadTask(taskId)} disabled={isLoading}>
                 {isLoading ? 'Loading...' : 'Load Puzzle'}
               </button>

@@ -7,6 +7,9 @@ test('feedback textarea maintains focus while typing', async ({ page }) => {
   // Navigate to the app
   await page.goto('http://localhost:5173');
 
+  // Wait for loading to finish first to prevent race condition resetting feedback
+  await expect(page.locator('.task-loader button')).toBeEnabled();
+
   // Wait for the app to load and the textarea to be visible
   const textarea = page.getByPlaceholder('Provide feedback to improve the refactored code...');
   await expect(textarea).toBeVisible();

@@ -29,19 +29,88 @@ header {
   margin-top: 15px;
 }
 
-.task-loader input {
+.puzzle-selector-container {
+  position: relative;
+  width: 226px;
+}
+
+.puzzle-selector-container input {
   padding: 8px 12px;
   border-radius: 4px;
   border: 1px solid #444;
   background-color: #2a2a2a;
   color: #fff;
-  width: 200px;
+  width: 100%;
+  box-sizing: border-box;
   font-family: inherit;
 }
 
-.task-loader input:focus {
+.puzzle-selector-container input:focus {
   outline: none;
   border-color: #0074D9;
+}
+
+.puzzle-dropdown-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 250px;
+  overflow-y: auto;
+  background-color: #1e1e1e;
+  border: 1px solid #444;
+  border-radius: 4px;
+  margin-top: 4px;
+  padding: 0;
+  list-style: none;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.puzzle-dropdown-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #fff;
+  font-size: 0.95rem;
+}
+
+.puzzle-dropdown-item:hover {
+  background-color: #333;
+}
+
+.puzzle-dropdown-item.selected {
+  background-color: #2a2a2a;
+  font-weight: bold;
+}
+
+.puzzle-dropdown-no-matches {
+  padding: 8px 12px;
+  color: #888;
+  font-style: italic;
+  font-size: 0.95rem;
+}
+
+.puzzle-status-icons {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.status-icon {
+  font-weight: bold;
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.solved-icon {
+  color: #2ecc40;
+}
+
+.failed-icon {
+  color: #ff4136;
 }
 
 .error-message {
