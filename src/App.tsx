@@ -9,7 +9,7 @@ import './index.css'
 // @ts-ignore
 import v2SetRaw from '../data/v2_public_evaluation_set.json.txt?raw'
 
-const v2Set: string[] = JSON.parse(v2SetRaw)
+const v2Set: string[] = JSON.parse(v2SetRaw).sort()
 
 function App() {
   const [mainTab, setMainTab] = useState<'training' | 'library'>('training')
@@ -38,8 +38,20 @@ function App() {
     }
   }, [])
 
-  const searchTerm = taskId.trim().toLowerCase()
-  const filteredPuzzles = v2Set.filter(id => id.toLowerCase().includes(searchTerm))
+  const searchTerm = taskId.trim()
+  let filteredPuzzles = v2Set
+
+  if (searchTerm) {
+    try {
+      const pattern = searchTerm.startsWith('^') ? searchTerm : `^${searchTerm}`
+      const regex = new RegExp(pattern, 'i')
+      filteredPuzzles = v2Set.filter(id => regex.test(id))
+    } catch (e) {
+      const lowerSearch = searchTerm.toLowerCase()
+      filteredPuzzles = v2Set.filter(id => id.toLowerCase().startsWith(lowerSearch))
+    }
+  }
+
   const [savedSolutions, setSavedSolutions] = useState<Record<string, string>>(() => {
     const saved = localStorage.getItem('arc_solutions')
     try {
