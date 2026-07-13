@@ -31,11 +31,14 @@ test('reasoning tab loads, retrieves solution, and displays matrix transformatio
     ]
   };
 
-  await page.route('**/dataset/tasks/00576224.json', route => route.fulfill({
-    status: 200,
-    contentType: 'application/json',
-    body: JSON.stringify(mockTask)
-  }));
+  await page.route(/.*\/dataset\/tasks\/00576224\.json/, route => {
+    console.log('Intercepted task json request:', route.request().url());
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(mockTask)
+    });
+  });
 
   // 2. Mock the JS solution code from GitHub Matrix repo
   // The solution simply changes 0s in the grid to 3
@@ -56,11 +59,17 @@ test('reasoning tab loads, retrieves solution, and displays matrix transformatio
     }
   `;
 
-  await page.route('**/solutions/00576224.js', route => route.fulfill({
-    status: 200,
-    contentType: 'text/plain',
-    body: mockSolution
-  }));
+  await page.route(/.*\/solutions\/00576224\.js/, route => {
+    console.log('Intercepted solution js request:', route.request().url());
+    return route.fulfill({
+      status: 200,
+      contentType: 'text/plain',
+      body: mockSolution
+    });
+  });
+
+  page.on('console', msg => console.log('PAGE LOG:', msg.text()));
+  page.on('pageerror', err => console.log('PAGE ERROR:', err.message));
 
   // 3. Navigate to the app
   await page.goto('http://localhost:5173');

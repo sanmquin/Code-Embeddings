@@ -14,23 +14,207 @@ interface ReasoningScreenProps {
 
 export function runAndTrack(inputGrid: number[][], jsCode: string, trainingData: any[]): number[][][] {
   const snapshots: number[][][] = [];
+  const parentMap = new WeakMap<any, any>();
+  let isTracking = false;
+
+  // Backup original globals and prototypes
+  const originalPush = Array.prototype.push;
+  const originalPop = Array.prototype.pop;
+  const originalShift = Array.prototype.shift;
+  const originalUnshift = Array.prototype.unshift;
+  const originalSplice = Array.prototype.splice;
+  const originalFill = Array.prototype.fill;
+  const originalReverse = Array.prototype.reverse;
+  const originalSort = Array.prototype.sort;
+  const originalMap = Array.prototype.map;
+  const originalSlice = Array.prototype.slice;
+  const originalFilter = Array.prototype.filter;
+  const originalFrom = Array.from;
 
   function unwrap(val: any): any {
     if (!Array.isArray(val)) return val;
     const raw = (val as any).__rawTarget || val;
-    return raw.map((item: any) => unwrap(item));
+    // Use original map to prevent trigger mapping/tracking
+    return originalMap.call(raw, (item: any) => unwrap(item));
   }
 
   function recordSnapshot(gridTarget: any) {
+    if (!isGridLike(gridTarget)) return;
     const clean = unwrap(gridTarget);
     const last = snapshots[snapshots.length - 1];
     if (last && JSON.stringify(last) === JSON.stringify(clean)) {
       return;
     }
     if (snapshots.length < 1000) {
-      snapshots.push(clean);
+      originalPush.call(snapshots, clean);
     }
   }
+
+  function isGridLike(arr: any): boolean {
+    if (!Array.isArray(arr) || arr.length === 0) return false;
+    if (!Array.isArray(arr[0])) return false;
+    for (let i = 0; i < arr.length; i++) {
+      if (!Array.isArray(arr[i])) return false;
+    }
+    return true;
+  }
+
+  // Override mutating and copying methods
+  Array.prototype.push = function(...args: any[]) {
+    if (!isTracking) {
+      return originalPush.apply(this, args);
+    }
+    isTracking = false;
+    try {
+      const res = originalPush.apply(this, args);
+      for (const arg of args) {
+        if (Array.isArray(arg)) {
+          parentMap.set(arg, this);
+        }
+      }
+      // Find root and snapshot
+      let root: any = this;
+      const visited = new Set();
+      while (parentMap.has(root) && !visited.has(root)) {
+        visited.add(root);
+        root = parentMap.get(root);
+      }
+      recordSnapshot(root);
+      return res;
+    } finally {
+      isTracking = true;
+    }
+  };
+
+  Array.prototype.unshift = function(...args: any[]) {
+    if (!isTracking) {
+      return originalUnshift.apply(this, args);
+    }
+    isTracking = false;
+    try {
+      const res = originalUnshift.apply(this, args);
+      for (const arg of args) {
+        if (Array.isArray(arg)) {
+          parentMap.set(arg, this);
+        }
+      }
+      let root: any = this;
+      const visited = new Set();
+      while (parentMap.has(root) && !visited.has(root)) {
+        visited.add(root);
+        root = parentMap.get(root);
+      }
+      recordSnapshot(root);
+      return res;
+    } finally {
+      isTracking = true;
+    }
+  };
+
+  const mutatingMethods = ['pop', 'shift', 'splice', 'fill', 'reverse', 'sort'] as const;
+  mutatingMethods.forEach(method => {
+    const original = (Array.prototype as any)[method];
+    (Array.prototype as any)[method] = function(...args: any[]) {
+      if (!isTracking) {
+        return original.apply(this, args);
+      }
+      isTracking = false;
+      try {
+        const res = original.apply(this, args);
+        let root: any = this;
+        const visited = new Set();
+        while (parentMap.has(root) && !visited.has(root)) {
+          visited.add(root);
+          root = parentMap.get(root);
+        }
+        recordSnapshot(root);
+        return res;
+      } finally {
+        isTracking = true;
+      }
+    };
+  });
+
+  // Track parent-child links for mapping/slicing
+  (Array.prototype as any).map = function(callback: any, thisArg: any) {
+    if (!isTracking) {
+      return originalMap.call(this, callback, thisArg);
+    }
+    isTracking = false;
+    try {
+      const res = originalMap.call(this, callback, thisArg);
+      if (Array.isArray(res)) {
+        for (let i = 0; i < res.length; i++) {
+          if (Array.isArray(res[i])) {
+            parentMap.set(res[i], res);
+          }
+        }
+      }
+      return res;
+    } finally {
+      isTracking = true;
+    }
+  };
+
+  (Array.prototype as any).slice = function(...args: any[]) {
+    if (!isTracking) {
+      return (originalSlice as any).apply(this, args);
+    }
+    isTracking = false;
+    try {
+      const res = (originalSlice as any).apply(this, args);
+      if (Array.isArray(res)) {
+        for (let i = 0; i < res.length; i++) {
+          if (Array.isArray(res[i])) {
+            parentMap.set(res[i], res);
+          }
+        }
+      }
+      return res;
+    } finally {
+      isTracking = true;
+    }
+  };
+
+  (Array.prototype as any).filter = function(callback: any, thisArg: any) {
+    if (!isTracking) {
+      return originalFilter.call(this, callback, thisArg);
+    }
+    isTracking = false;
+    try {
+      const res = originalFilter.call(this, callback, thisArg);
+      if (Array.isArray(res)) {
+        for (let i = 0; i < res.length; i++) {
+          if (Array.isArray(res[i])) {
+            parentMap.set(res[i], res);
+          }
+        }
+      }
+      return res;
+    } finally {
+      isTracking = true;
+    }
+  };
+
+  Array.from = function(iterable: any, mapFn?: any, thisArg?: any) {
+    if (!isTracking) {
+      return originalFrom.call(Array, iterable, mapFn, thisArg);
+    }
+    isTracking = false;
+    try {
+      const res = originalFrom.call(Array, iterable, mapFn, thisArg);
+      if (Array.isArray(res)) {
+        for (let i = 0; i < res.length; i++) {
+          if (Array.isArray(res[i])) {
+            parentMap.set(res[i], res);
+          }
+        }
+      }
+      return res;
+    } finally {
+      isTracking = true;
+    }
+  } as any;
 
   function wrap(arr: any, isOuter = false): any {
     if (!Array.isArray(arr)) return arr;
@@ -63,7 +247,15 @@ export function runAndTrack(inputGrid: number[][], jsCode: string, trainingData:
             set(rowTarget, rowProp, rowValue, rowReceiver) {
               const rawVal = rowValue && (rowValue as any).__rawTarget ? (rowValue as any).__rawTarget : rowValue;
               const ok = Reflect.set(rowTarget, rowProp, rawVal, rowReceiver);
-              recordSnapshot(target);
+
+              // Find parent/root of target
+              let root: any = target;
+              const visited = new Set();
+              while (parentMap.has(root) && !visited.has(root)) {
+                visited.add(root);
+                root = parentMap.get(root);
+              }
+              recordSnapshot(root);
               return ok;
             }
           });
@@ -74,7 +266,14 @@ export function runAndTrack(inputGrid: number[][], jsCode: string, trainingData:
       set(target, prop, value, receiver) {
         const rawVal = value && (value as any).__rawTarget ? (value as any).__rawTarget : value;
         const ok = Reflect.set(target, prop, rawVal, receiver);
-        recordSnapshot(target);
+
+        let root: any = target;
+        const visited = new Set();
+        while (parentMap.has(root) && !visited.has(root)) {
+          visited.add(root);
+          root = parentMap.get(root);
+        }
+        recordSnapshot(root);
         return ok;
       }
     };
@@ -110,7 +309,9 @@ export function runAndTrack(inputGrid: number[][], jsCode: string, trainingData:
 
   try {
     const runnerFn = new Function(runnerCode)();
+    isTracking = true;
     const finalOutput = runnerFn(proxyGrid, wrap, trainingData);
+    isTracking = false;
 
     const unwrappedFinal = unwrap(finalOutput);
     const last = snapshots[snapshots.length - 1];
@@ -120,6 +321,20 @@ export function runAndTrack(inputGrid: number[][], jsCode: string, trainingData:
   } catch (err) {
     console.error('Tracking runner error:', err);
     throw err;
+  } finally {
+    // RESTORE ALL ORIGINAL GLOBALS AND PROTOTYPES!
+    Array.prototype.push = originalPush;
+    Array.prototype.pop = originalPop;
+    Array.prototype.shift = originalShift;
+    Array.prototype.unshift = originalUnshift;
+    Array.prototype.splice = originalSplice;
+    Array.prototype.fill = originalFill;
+    Array.prototype.reverse = originalReverse;
+    Array.prototype.sort = originalSort;
+    Array.prototype.map = originalMap;
+    Array.prototype.slice = originalSlice;
+    Array.prototype.filter = originalFilter;
+    Array.from = originalFrom;
   }
 
   return snapshots;
