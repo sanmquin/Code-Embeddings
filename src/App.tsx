@@ -3,6 +3,7 @@ import TransformationScreen from './components/TransformationScreen'
 import ExecutionScreen from './components/ExecutionScreen'
 import PublishScreen from './components/PublishScreen'
 import LibraryScreen from './components/LibraryScreen'
+import ReasoningScreen from './components/ReasoningScreen'
 import { getArcPythonUrlPatterns, getArcJsonUrl } from './constants'
 import './index.css'
 
@@ -12,7 +13,7 @@ import v2SetRaw from '../data/v2_public_evaluation_set.json.txt?raw'
 const v2Set: string[] = JSON.parse(v2SetRaw).sort()
 
 function App() {
-  const [mainTab, setMainTab] = useState<'training' | 'library'>('training')
+  const [mainTab, setMainTab] = useState<'training' | 'library' | 'reasoning'>('training')
   const [screen, setScreen] = useState<'transformation' | 'execution' | 'publish'>('transformation')
   const [refactoredCode, setRefactoredCode] = useState<string>('')
   const [taskId, setTaskId] = useState<string>('00576224')
@@ -150,6 +151,12 @@ function App() {
           className={mainTab === 'training' ? 'active' : ''}
         >
           Training Data
+        </button>
+        <button
+          onClick={() => setMainTab('reasoning')}
+          className={mainTab === 'reasoning' ? 'active' : ''}
+        >
+          Reasoning
         </button>
         <button
           onClick={() => setMainTab('library')}
@@ -311,8 +318,10 @@ function App() {
             )}
           </main>
         </>
-      ) : (
+      ) : mainTab === 'library' ? (
         <LibraryScreen />
+      ) : (
+        <ReasoningScreen />
       )}
     </div>
   )
