@@ -4,6 +4,7 @@ import ExecutionScreen from './components/ExecutionScreen'
 import PublishScreen from './components/PublishScreen'
 import LibraryScreen from './components/LibraryScreen'
 import ReasoningScreen from './components/ReasoningScreen'
+import BatchDocScreen from './components/BatchDocScreen'
 import { getArcPythonUrlPatterns, getArcJsonUrl } from './constants'
 import './index.css'
 
@@ -15,6 +16,7 @@ const v2Set: string[] = JSON.parse(v2SetRaw).sort()
 function App() {
   const [mainTab, setMainTab] = useState<'training' | 'library' | 'reasoning'>('training')
   const [screen, setScreen] = useState<'transformation' | 'execution' | 'publish'>('transformation')
+  const [isBatchMode, setIsBatchMode] = useState<boolean>(false)
   const [refactoredCode, setRefactoredCode] = useState<string>('')
   const [taskId, setTaskId] = useState<string>('00576224')
   const [pythonSolution, setPythonSolution] = useState<string>('')
@@ -248,6 +250,20 @@ function App() {
                   ))}
                 </select>
               )}
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}>
+                  <input
+                    type="checkbox"
+                    checked={isBatchMode}
+                    onChange={(e) => setIsBatchMode(e.target.checked)}
+                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                  />
+                  <strong style={{ fontSize: '0.95rem', color: isBatchMode ? '#0074D9' : '#aaa' }}>
+                    Batch Python Documentation
+                  </strong>
+                </label>
+              </div>
             </div>
             {error && (
               <div className="error-container">
@@ -275,48 +291,60 @@ function App() {
             )}
           </header>
 
-          <nav>
-            <button
-              onClick={() => setScreen('transformation')}
-              className={screen === 'transformation' ? 'active' : ''}
-              disabled={!pythonSolution}
-            >
-              1. Refactor Solution
-            </button>
-            <button
-              onClick={() => setScreen('execution')}
-              disabled={!refactoredCode}
-              className={screen === 'execution' ? 'active' : ''}
-            >
-              2. Execute & Verify
-            </button>
-            <button
-              onClick={() => setScreen('publish')}
-              disabled={!testsPassed}
-              className={screen === 'publish' ? 'active' : ''}
-            >
-              3. Publish to GitHub
-            </button>
-          </nav>
+          {isBatchMode ? (
+            <main>
+              <BatchDocScreen
+                startTaskId={taskId}
+                v2Set={v2Set}
+                getArcPythonUrlPatterns={getArcPythonUrlPatterns}
+              />
+            </main>
+          ) : (
+            <>
+              <nav>
+                <button
+                  onClick={() => setScreen('transformation')}
+                  className={screen === 'transformation' ? 'active' : ''}
+                  disabled={!pythonSolution}
+                >
+                  1. Refactor Solution
+                </button>
+                <button
+                  onClick={() => setScreen('execution')}
+                  disabled={!refactoredCode}
+                  className={screen === 'execution' ? 'active' : ''}
+                >
+                  2. Execute & Verify
+                </button>
+                <button
+                  onClick={() => setScreen('publish')}
+                  disabled={!testsPassed}
+                  className={screen === 'publish' ? 'active' : ''}
+                >
+                  3. Publish to GitHub
+                </button>
+              </nav>
 
-          <main>
-            {screen === 'transformation' ? (
-              <TransformationScreen
-                pythonSolution={pythonSolution}
-                taskData={taskData}
-                refactoredCode={refactoredCode}
-                onCodeChange={handleCodeChange}
-              />
-            ) : screen === 'execution' ? (
-              <ExecutionScreen
-                code={refactoredCode}
-                taskData={taskData}
-                onTestsPassed={setTestsPassed}
-              />
-            ) : (
-              <PublishScreen taskId={taskId} code={refactoredCode} />
-            )}
-          </main>
+              <main>
+                {screen === 'transformation' ? (
+                  <TransformationScreen
+                    pythonSolution={pythonSolution}
+                    taskData={taskData}
+                    refactoredCode={refactoredCode}
+                    onCodeChange={handleCodeChange}
+                  />
+                ) : screen === 'execution' ? (
+                  <ExecutionScreen
+                    code={refactoredCode}
+                    taskData={taskData}
+                    onTestsPassed={setTestsPassed}
+                  />
+                ) : (
+                  <PublishScreen taskId={taskId} code={refactoredCode} />
+                )}
+              </main>
+            </>
+          )}
         </>
       ) : mainTab === 'library' ? (
         <LibraryScreen />
