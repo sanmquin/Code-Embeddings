@@ -4,6 +4,7 @@ import ExecutionScreen from './components/ExecutionScreen'
 import PublishScreen from './components/PublishScreen'
 import LibraryScreen from './components/LibraryScreen'
 import ReasoningScreen from './components/ReasoningScreen'
+import ClusterVisualizationScreen from './components/ClusterVisualizationScreen'
 import BatchDocScreen from './components/BatchDocScreen'
 import { getArcPythonUrlPatterns, getArcJsonUrl } from './constants'
 import './index.css'
@@ -14,7 +15,7 @@ import v2SetRaw from '../data/v2_public_evaluation_set.json.txt?raw'
 const v2Set: string[] = JSON.parse(v2SetRaw).sort()
 
 function App() {
-  const [mainTab, setMainTab] = useState<'training' | 'library' | 'reasoning'>('training')
+  const [mainTab, setMainTab] = useState<'training' | 'library' | 'reasoning' | 'cluster_visualization'>('training')
   const [screen, setScreen] = useState<'transformation' | 'execution' | 'publish'>('transformation')
   const [isBatchMode, setIsBatchMode] = useState<boolean>(false)
   const [refactoredCode, setRefactoredCode] = useState<string>('')
@@ -165,6 +166,12 @@ function App() {
           className={mainTab === 'library' ? 'active' : ''}
         >
           Library
+        </button>
+        <button
+          onClick={() => setMainTab('cluster_visualization')}
+          className={mainTab === 'cluster_visualization' ? 'active' : ''}
+        >
+          Cluster Visualization
         </button>
       </nav>
 
@@ -348,8 +355,10 @@ function App() {
         </>
       ) : mainTab === 'library' ? (
         <LibraryScreen />
-      ) : (
+      ) : mainTab === 'reasoning' ? (
         <ReasoningScreen />
+      ) : (
+        <ClusterVisualizationScreen />
       )}
     </div>
   )
