@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import MatrixVisualization from './MatrixVisualization';
 
 // @ts-ignore
@@ -9,22 +9,42 @@ import arcTrainingRaw from '../../data/arc_training.min.json?raw';
 interface CSVRow {
   taskId: string;
   cluster: number;
+  similarity: number;
   numGrids: number;
 }
 
 const parseCSV = (csvText: string): CSVRow[] => {
   const lines = csvText.split('\n');
   const rows: CSVRow[] = [];
+  if (lines.length === 0) return rows;
+
+  const headerLine = lines[0].trim();
+  const headers = headerLine.split(',').map(h => h.trim().toLowerCase());
+
+  const taskIdIdx = headers.indexOf('task_id');
+  const clusterIdx = headers.indexOf('puzzle_cluster');
+  const similarityIdx = headers.indexOf('puzzle_distance_to_centroid');
+  const numGridsIdx = headers.indexOf('num_grids');
+
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line) continue;
     const parts = line.split(',');
-    if (parts.length >= 3) {
-      const clusterVal = parseInt(parts[1].trim(), 10);
-      const numGridsVal = parseInt(parts[2].trim(), 10);
+
+    const tId = taskIdIdx !== -1 ? parts[taskIdIdx] : parts[0];
+    const clusterPart = clusterIdx !== -1 ? parts[clusterIdx] : parts[1];
+    const similarityPart = similarityIdx !== -1 ? parts[similarityIdx] : (parts.length > 3 ? parts[2] : '0');
+    const numGridsPart = numGridsIdx !== -1 ? parts[numGridsIdx] : (parts.length > 3 ? parts[3] : parts[2]);
+
+    if (tId && clusterPart) {
+      const clusterVal = parseInt(clusterPart.trim(), 10);
+      const similarityVal = parseFloat(similarityPart?.trim() || '0');
+      const numGridsVal = parseInt(numGridsPart?.trim() || '0', 10);
+
       rows.push({
-        taskId: parts[0].trim(),
+        taskId: tId.trim(),
         cluster: isNaN(clusterVal) ? -1 : clusterVal,
+        similarity: isNaN(similarityVal) ? 0 : similarityVal,
         numGrids: isNaN(numGridsVal) ? 0 : numGridsVal,
       });
     }
@@ -68,6 +88,24 @@ const ClusterVisualizationScreen: React.FC = () => {
       return {};
     }
   }, []);
+
+  // Dynamically compute unique clusters from the data
+  const uniqueClusters = useMemo(() => {
+    const clustersSet = new Set<number>();
+    clusterRows.forEach(row => {
+      if (row.cluster !== -1) {
+        clustersSet.add(row.cluster);
+      }
+    });
+    return Array.from(clustersSet).sort((a, b) => a - b);
+  }, [clusterRows]);
+
+  // Handle selectedCluster initialization or updates if uniqueClusters list shifts
+  useEffect(() => {
+    if (uniqueClusters.length > 0 && !uniqueClusters.includes(selectedCluster)) {
+      setSelectedCluster(uniqueClusters[0]);
+    }
+  }, [uniqueClusters, selectedCluster]);
 
   // Filter tasks belonging to the selected cluster
   const clusterTasks = useMemo(() => {
@@ -177,15 +215,15 @@ const ClusterVisualizationScreen: React.FC = () => {
       <div style={{ marginBottom: '25px' }}>
         <h3 style={{ fontSize: '1.1rem', color: '#bbb', marginBottom: '10px' }}>Select Cluster:</h3>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          {Array.from({ length: 10 }).map((_, index) => {
-            const countInCsv = clusterRows.filter(r => r.cluster === index).length;
-            const countInJson = clusterRows.filter(r => r.cluster === index && arcTrainingData[r.taskId]).length;
-            const isSelected = selectedCluster === index;
+          {uniqueClusters.map((clusterId) => {
+            const countInCsv = clusterRows.filter(r => r.cluster === clusterId).length;
+            const countInJson = clusterRows.filter(r => r.cluster === clusterId && arcTrainingData[r.taskId]).length;
+            const isSelected = selectedCluster === clusterId;
 
             return (
               <button
-                key={`cluster-btn-${index}`}
-                onClick={() => handleClusterSelect(index)}
+                key={`cluster-btn-${clusterId}`}
+                onClick={() => handleClusterSelect(clusterId)}
                 style={{
                   padding: '10px 14px',
                   backgroundColor: isSelected ? '#0074D9' : '#1e1e1e',
@@ -199,7 +237,7 @@ const ClusterVisualizationScreen: React.FC = () => {
                   minWidth: '110px',
                 }}
               >
-                <div style={{ fontSize: '0.95rem' }}>Cluster {index}</div>
+                <div style={{ fontSize: '0.95rem' }}>Cluster {clusterId}</div>
                 <div style={{ fontSize: '0.75rem', opacity: 0.7, marginTop: '4px' }}>
                   {countInCsv > 0 ? `${countInJson} / ${countInCsv} parsed` : '0 puzzles'}
                 </div>
@@ -285,6 +323,11 @@ const ClusterVisualizationScreen: React.FC = () => {
                   <span style={{ backgroundColor: '#2a2a2a', color: '#aaa', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem' }}>
                     {task.numGrids} total grids
                   </span>
+                  {task.similarity !== undefined && (
+                    <span style={{ backgroundColor: '#2a2a2a', color: '#aaa', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem' }}>
+                      Distance to Centroid (Similarity): {task.similarity.toFixed(4)}
+                    </span>
+                  )}
                 </div>
                 <div style={{ fontSize: '0.85rem', color: '#888' }}>
                   Train Examples: {task.taskData?.train?.length || 0} | Test Examples: {task.taskData?.test?.length || 0}
@@ -301,6 +344,7 @@ const ClusterVisualizationScreen: React.FC = () => {
                   scrollSnapType: 'x mandatory',
                 }}
               >
+                {/* Train examples mapping */}
                 {task.taskData?.train?.map((tc: any, idx: number) => (
                   <div
                     key={`pair-${idx}`}
@@ -328,6 +372,42 @@ const ClusterVisualizationScreen: React.FC = () => {
                         <div style={{ fontSize: '0.75rem', color: '#888', marginBottom: '5px' }}>OUTPUT</div>
                         <MatrixVisualization data={tc.output} />
                       </div>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Test examples mapping */}
+                {task.taskData?.test?.map((tc: any, idx: number) => (
+                  <div
+                    key={`test-pair-${idx}`}
+                    style={{
+                      flex: '0 0 auto',
+                      backgroundColor: '#161616',
+                      border: '1px solid #ff851b', // orange border for test examples
+                      borderRadius: '6px',
+                      padding: '15px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '15px',
+                    }}
+                  >
+                    <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#ff851b', borderBottom: '1px solid #222', paddingBottom: '5px' }}>
+                      Test Example #{idx + 1}
+                    </div>
+                    <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ fontSize: '0.75rem', color: '#888', marginBottom: '5px' }}>INPUT</div>
+                        <MatrixVisualization data={tc.input} />
+                      </div>
+                      {tc.output && (
+                        <>
+                          <div style={{ color: '#444', fontSize: '1.5rem', fontWeight: 'bold' }}>→</div>
+                          <div>
+                            <div style={{ fontSize: '0.75rem', color: '#888', marginBottom: '5px' }}>OUTPUT</div>
+                            <MatrixVisualization data={tc.output} />
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 ))}

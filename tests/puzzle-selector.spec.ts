@@ -3,8 +3,8 @@ import { test, expect } from '@playwright/test';
 test('puzzle selector dropdown, search filtering, and status icons', async ({ page }) => {
   test.setTimeout(60000);
 
-  // Intercept requests for 3e6067c3 to guarantee a loading failure
-  await page.route('**/3e6067c3**', route => route.fulfill({
+  // Intercept requests for 3194b014 to guarantee a loading failure
+  await page.route('**/3194b014**', route => route.fulfill({
     status: 404,
     contentType: 'text/plain',
     body: 'Not Found'
@@ -13,8 +13,8 @@ test('puzzle selector dropdown, search filtering, and status icons', async ({ pa
   // 1. Set some initial localStorage solved items
   await page.addInitScript(() => {
     localStorage.setItem('arc_solutions', JSON.stringify({
-      "1ae2feb7": "const solve = (grid, training) => { return grid; };",
-      "3e6067c3": "const solve = (grid, training) => { return grid; };"
+      "1a2e2828": "const solve = (grid, training) => { return grid; };",
+      "3194b014": "const solve = (grid, training) => { return grid; };"
     }));
   });
 
@@ -34,24 +34,24 @@ test('puzzle selector dropdown, search filtering, and status icons', async ({ pa
   const dropdownList = page.locator('.puzzle-dropdown-list');
   await expect(dropdownList).toBeVisible();
 
-  // Check that "1ae2feb7" is in the list and has a checkmark icon
-  const item1 = page.locator('.puzzle-dropdown-item').filter({ hasText: '1ae2feb7' });
+  // Check that "1a2e2828" is in the list and has a checkmark icon
+  const item1 = page.locator('.puzzle-dropdown-item').filter({ hasText: '1a2e2828' });
   await expect(item1).toBeVisible();
   const solvedIcon1 = item1.locator('.solved-icon');
   await expect(solvedIcon1).toBeVisible();
   await expect(solvedIcon1).toHaveText('✓');
 
-  // Check that "16b78196" is in the list and does NOT have a checkmark icon
-  const itemUnsolved = page.locator('.puzzle-dropdown-item').filter({ hasText: '16b78196' });
+  // Check that "1a07d186" is in the list and does NOT have a checkmark icon
+  const itemUnsolved = page.locator('.puzzle-dropdown-item').filter({ hasText: '1a07d186' });
   await expect(itemUnsolved).toBeVisible();
   await expect(itemUnsolved.locator('.solved-icon')).not.toBeVisible();
 
   // 5. Test search/filtering (starts-with exact match and RegExp)
-  // Let's type "1ae" to filter the list (starts with 1ae)
-  await selectorInput.fill('1ae');
+  // Let's type "1a2e" to filter the list (starts with 1a2e)
+  await selectorInput.fill('1a2e');
   const listItems = page.locator('.puzzle-dropdown-item');
   await expect(listItems).toHaveCount(1);
-  await expect(listItems.first()).toContainText('1ae2feb7');
+  await expect(listItems.first()).toContainText('1a2e2828');
 
   // Let's type "7" and verify it ONLY matches items STARTING with 7 (like 7b0280bc)
   // and does NOT match 1ae2feb7 which ends in 7
@@ -64,7 +64,7 @@ test('puzzle selector dropdown, search filtering, and status icons', async ({ pa
 
   // Let's type a custom RegExp like "^[1-2]" or just "[1-2]" which gets prepend with ^
   await selectorInput.fill('[1-2]a');
-  // Should match "1ae2feb7" or "2ba387bc" etc. starting with 1 or 2 followed by a
+  // Should match "1a07d186" or "1a244afd" etc. starting with 1 or 2 followed by a
   const regexMatchCount = await listItems.count();
   for (let i = 0; i < regexMatchCount; i++) {
     const text = await listItems.nth(i).locator('.puzzle-id-text').innerText();
@@ -87,20 +87,20 @@ test('puzzle selector dropdown, search filtering, and status icons', async ({ pa
   await expect(selectorInput).toHaveValue(firstId);
 
   // 7. Verify cross icon on failed loads
-  // Let's select "3e6067c3".
+  // Let's select "3194b014".
   await selectorInput.focus();
-  await selectorInput.fill('3e6067c3');
-  const item3InList = page.locator('.puzzle-dropdown-item').filter({ hasText: '3e6067c3' });
+  await selectorInput.fill('3194b014');
+  const item3InList = page.locator('.puzzle-dropdown-item').filter({ hasText: '3194b014' });
   await expect(item3InList).toBeVisible();
   await item3InList.click();
 
   // Wait for loading to finish and error container to show up
   await expect(page.locator('.error-container')).toBeVisible();
 
-  // Focus to open dropdown, check "3e6067c3" has a cross icon "✗"
+  // Focus to open dropdown, check "3194b014" has a cross icon "✗"
   await selectorInput.focus();
   await selectorInput.fill(''); // clear to see all
-  const item3 = page.locator('.puzzle-dropdown-item').filter({ hasText: '3e6067c3' });
+  const item3 = page.locator('.puzzle-dropdown-item').filter({ hasText: '3194b014' });
   await expect(item3).toBeVisible();
   const failedIcon = item3.locator('.failed-icon');
   await expect(failedIcon).toBeVisible();

@@ -10,7 +10,7 @@ import { getArcPythonUrlPatterns, getArcJsonUrl } from './constants'
 import './index.css'
 
 // @ts-ignore
-import v2SetRaw from '../data/v2_public_evaluation_set.json.txt?raw'
+import v2SetRaw from '../data/v2_public_training_set.json.txt?raw'
 
 const v2Set: string[] = JSON.parse(v2SetRaw).sort()
 
@@ -63,6 +63,16 @@ function App() {
     } catch (e) {
       console.error('Failed to parse saved solutions:', e)
       return {}
+    }
+  })
+
+  const [documentedPuzzles, setDocumentedPuzzles] = useState<string[]>(() => {
+    const saved = localStorage.getItem('arc_documented')
+    try {
+      return saved ? JSON.parse(saved) : []
+    } catch (e) {
+      console.error('Failed to parse documented puzzles:', e)
+      return []
     }
   })
 
@@ -153,7 +163,13 @@ function App() {
           onClick={() => setMainTab('training')}
           className={mainTab === 'training' ? 'active' : ''}
         >
-          Training Data
+          Training
+        </button>
+        <button
+          onClick={() => setMainTab('cluster_visualization')}
+          className={mainTab === 'cluster_visualization' ? 'active' : ''}
+        >
+          Clusters
         </button>
         <button
           onClick={() => setMainTab('reasoning')}
@@ -166,12 +182,6 @@ function App() {
           className={mainTab === 'library' ? 'active' : ''}
         >
           Library
-        </button>
-        <button
-          onClick={() => setMainTab('cluster_visualization')}
-          className={mainTab === 'cluster_visualization' ? 'active' : ''}
-        >
-          Cluster Visualization
         </button>
       </nav>
 
@@ -207,6 +217,7 @@ function App() {
                     {filteredPuzzles.length > 0 ? (
                       filteredPuzzles.map((id) => {
                         const isSolved = !!savedSolutions[id]
+                        const isDocumented = documentedPuzzles.includes(id)
                         const isFailed = failedPuzzles.has(id)
                         return (
                           <li
@@ -222,6 +233,9 @@ function App() {
                             <div className="puzzle-status-icons">
                               {isSolved && (
                                 <span className="status-icon solved-icon" title="Solved">✓</span>
+                              )}
+                              {isDocumented && (
+                                <span className="status-icon documented-icon" style={{ color: '#0074D9' }} title="Documented">✓</span>
                               )}
                               {isFailed && (
                                 <span className="status-icon failed-icon" title="Failed to load">✗</span>
@@ -304,6 +318,12 @@ function App() {
                 startTaskId={taskId}
                 v2Set={v2Set}
                 getArcPythonUrlPatterns={getArcPythonUrlPatterns}
+                onPuzzleDocumented={(id) => {
+                  setDocumentedPuzzles(prev => {
+                    if (prev.includes(id)) return prev;
+                    return [...prev, id];
+                  });
+                }}
               />
             </main>
           ) : (
