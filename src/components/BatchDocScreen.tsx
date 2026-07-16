@@ -4,6 +4,7 @@ interface BatchDocScreenProps {
   startTaskId: string;
   v2Set: string[];
   getArcPythonUrlPatterns: (id: string) => string[];
+  onPuzzleDocumented?: (id: string) => void;
 }
 
 type TaskStatus = 'pending' | 'fetching' | 'explaining' | 'committing' | 'completed' | 'failed' | 'skipped';
@@ -19,7 +20,8 @@ interface TaskProgress {
 const BatchDocScreen: React.FC<BatchDocScreenProps> = ({
   startTaskId,
   v2Set,
-  getArcPythonUrlPatterns
+  getArcPythonUrlPatterns,
+  onPuzzleDocumented
 }) => {
   const [batchTasks, setBatchTasks] = useState<string[]>([]);
   const [progress, setProgress] = useState<Record<string, TaskProgress>>({});
@@ -57,7 +59,7 @@ const BatchDocScreen: React.FC<BatchDocScreenProps> = ({
     setCurrentIndex(-1);
     setPrUrl(null);
     setGlobalError(null);
-  }, [startTaskId, v2Set, isRunning]);
+  }, [startTaskId, v2Set]);
 
   const fetchPythonCode = async (id: string): Promise<string> => {
     const urls = getArcPythonUrlPatterns(id);
@@ -178,6 +180,25 @@ const BatchDocScreen: React.FC<BatchDocScreenProps> = ({
         const commitData = await commitRes.json();
         if (commitData.prUrl) {
           setPrUrl(commitData.prUrl);
+        }
+
+        // Update localStorage for documented puzzles
+        try {
+          const documented = localStorage.getItem('arc_documented');
+          let docList: string[] = [];
+          if (documented) {
+            docList = JSON.parse(documented);
+          }
+          if (!docList.includes(id)) {
+            docList.push(id);
+            localStorage.setItem('arc_documented', JSON.stringify(docList));
+          }
+        } catch (e) {
+          console.error('Failed to update documented list in localStorage', e);
+        }
+
+        if (onPuzzleDocumented) {
+          onPuzzleDocumented(id);
         }
 
         setProgress(prev => ({

@@ -4,7 +4,7 @@ import MatrixVisualization from './MatrixVisualization';
 import { ARC_REPO_BASE } from '../constants';
 
 // @ts-ignore
-import v2SetRaw from '../../data/v2_public_evaluation_set.json.txt?raw';
+import v2SetRaw from '../../data/v2_public_training_set.json.txt?raw';
 
 const v2Set: string[] = JSON.parse(v2SetRaw).sort();
 
@@ -373,6 +373,15 @@ const ReasoningScreen: React.FC<ReasoningScreenProps> = () => {
     }
   });
 
+  const [documentedPuzzles] = useState<string[]>(() => {
+    const saved = localStorage.getItem('arc_documented');
+    try {
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -580,6 +589,7 @@ const ReasoningScreen: React.FC<ReasoningScreenProps> = () => {
               {filteredPuzzles.length > 0 ? (
                 filteredPuzzles.map((id) => {
                   const isSolved = !!savedSolutions[id];
+                  const isDocumented = documentedPuzzles.includes(id);
                   const isFailed = failedPuzzles.has(id);
                   return (
                     <li
@@ -603,6 +613,9 @@ const ReasoningScreen: React.FC<ReasoningScreenProps> = () => {
                       <div className="puzzle-status-icons" style={{ display: 'flex', gap: '4px' }}>
                         {isSolved && (
                           <span className="status-icon solved-icon" style={{ color: '#4caf50' }} title="Solved">✓</span>
+                        )}
+                        {isDocumented && (
+                          <span className="status-icon documented-icon" style={{ color: '#0074D9' }} title="Documented">✓</span>
                         )}
                         {isFailed && (
                           <span className="status-icon failed-icon" style={{ color: '#f44336' }} title="Failed to load">✗</span>
