@@ -3,7 +3,11 @@
 > vite
 
 
-  VITE v5.4.21  ready in 399 ms
+  VITE v5.4.21  ready in 289 ms
 
   ➜  Local:   http://localhost:5173/
   ➜  Network: use --host to expose
+1:21:52 AM [vite] hmr update /src/components/ClusterVisualizationScreen.tsx
+1:22:20 AM [vite] hmr update /src/components/ClusterVisualizationScreen.tsx
+1:22:55 AM [vite] hmr update /src/components/ClusterVisualizationScreen.tsx
+1:23:35 AM [vite] hmr update /src/components/ClusterVisualizationScreen.tsx
