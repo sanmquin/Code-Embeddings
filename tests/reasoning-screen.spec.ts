@@ -95,6 +95,15 @@ test('reasoning tab loads, retrieves solution, and displays matrix transformatio
   await expect(loadButton).toBeVisible();
   await loadButton.click();
 
+  // Verify Interactive Solver configuration is visible by default
+  const solverHeader = page.locator('h3', { hasText: 'Interactive Solver Configuration' });
+  await expect(solverHeader).toBeVisible();
+
+  // Now, click "Solution Visualization" to test the playback controls
+  const vizTab = page.locator('button', { hasText: 'Solution Visualization' });
+  await expect(vizTab).toBeVisible();
+  await vizTab.click();
+
   // 7. Verify task and solution are fetched and the playback panel appears
   const selectCaseHeader = page.locator('h3', { hasText: 'Select Training/Testing Case' });
   await expect(selectCaseHeader).toBeVisible();

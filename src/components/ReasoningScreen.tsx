@@ -1,15 +1,82 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { transform } from 'sucrase';
 import MatrixVisualization from './MatrixVisualization';
+import PuzzleSelector from './PuzzleSelector';
 import { ARC_REPO_BASE } from '../constants';
 
-// @ts-ignore
-import v2SetRaw from '../../data/v2_public_training_set.json.txt?raw';
-
-const v2Set: string[] = JSON.parse(v2SetRaw).sort();
 
 interface ReasoningScreenProps {
-  // Shared state with App if any, or self-contained. Let's make it fully self-contained!
+  initialTaskId?: string;
+  initialMode?: 'solver' | 'visualization';
+}
+
+export interface ConnectedComponentStats {
+  numComponents: number;
+  maxSize: number;
+  minSize: number;
+  avgSize: number;
+  componentMap: number[][]; // same dimensions as grid, elements are component indices (1-based) or 0 (background)
+}
+
+export function extractConnectedComponents(grid: number[][], bgVal: number): ConnectedComponentStats {
+  if (!grid || grid.length === 0 || !grid[0]) {
+    return { numComponents: 0, maxSize: 0, minSize: 0, avgSize: 0, componentMap: [] };
+  }
+
+  const rows = grid.length;
+  const cols = grid[0].length;
+  const visited = Array.from({ length: rows }, () => Array(cols).fill(false));
+  const componentMap = Array.from({ length: rows }, () => Array(cols).fill(0));
+  let componentId = 0;
+  const sizes: number[] = [];
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (grid[r][c] !== bgVal && !visited[r][c]) {
+        componentId++;
+        let size = 0;
+        const queue: [number, number][] = [[r, c]];
+        visited[r][c] = true;
+
+        while (queue.length > 0) {
+          const [currR, currC] = queue.shift()!;
+          componentMap[currR][currC] = componentId;
+          size++;
+
+          // 8-adjacency exploration
+          for (let dr = -1; dr <= 1; dr++) {
+            for (let dc = -1; dc <= 1; dc++) {
+              if (dr === 0 && dc === 0) continue;
+              const nr = currR + dr;
+              const nc = currC + dc;
+
+              if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+                if (grid[nr][nc] !== bgVal && !visited[nr][nc]) {
+                  visited[nr][nc] = true;
+                  queue.push([nr, nc]);
+                }
+              }
+            }
+          }
+        }
+        sizes.push(size);
+      }
+    }
+  }
+
+  // Filter out cases where total components < minCompCount if desired, or handle accordingly
+  const numComponents = sizes.length;
+  const maxSize = numComponents > 0 ? Math.max(...sizes) : 0;
+  const minSize = numComponents > 0 ? Math.min(...sizes) : 0;
+  const avgSize = numComponents > 0 ? parseFloat((sizes.reduce((a, b) => a + b, 0) / numComponents).toFixed(1)) : 0;
+
+  return {
+    numComponents,
+    maxSize,
+    minSize,
+    avgSize,
+    componentMap,
+  };
 }
 
 export function runAndTrack(inputGrid: number[][], jsCode: string, trainingData: any[]): number[][][] {
@@ -340,12 +407,17 @@ export function runAndTrack(inputGrid: number[][], jsCode: string, trainingData:
   return snapshots;
 }
 
-const ReasoningScreen: React.FC<ReasoningScreenProps> = () => {
-  const [taskId, setTaskId] = useState<string>('00576224');
+const ReasoningScreen: React.FC<ReasoningScreenProps> = ({ initialTaskId, initialMode }) => {
+  const [taskId, setTaskId] = useState<string>(initialTaskId || '00576224');
+  const [mode, setMode] = useState<'solver' | 'visualization'>(initialMode || 'solver');
   const [taskData, setTaskData] = useState<any>(null);
   const [solutionCode, setSolutionCode] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Component Extraction state
+  const [minComponents, setMinComponents] = useState<number>(3);
+  const [bgColor, setBgColor] = useState<number>(0);
 
   // Case selection
   const [selectedCaseType, setSelectedCaseType] = useState<'train' | 'test'>('train');
@@ -358,10 +430,18 @@ const ReasoningScreen: React.FC<ReasoningScreenProps> = () => {
   const [playSpeed, setPlaySpeed] = useState<number>(500); // ms per frame
 
   // Dropdown combobox states
-  const [showDropdown, setShowDropdown] = useState<boolean>(false);
   const [failedPuzzles, setFailedPuzzles] = useState<Set<string>>(new Set());
-  const containerRef = useRef<HTMLDivElement>(null);
   const playIntervalRef = useRef<any>(null);
+
+  // Sync initial parameters when navigated from Clusters tab
+  useEffect(() => {
+    if (initialTaskId) {
+      setTaskId(initialTaskId);
+    }
+    if (initialMode) {
+      setMode(initialMode);
+    }
+  }, [initialTaskId, initialMode]);
 
   // Load solutions from localStorage to show green checkmarks
   const [savedSolutions] = useState<Record<string, string>>(() => {
@@ -381,32 +461,6 @@ const ReasoningScreen: React.FC<ReasoningScreenProps> = () => {
       return [];
     }
   });
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setShowDropdown(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  const searchTerm = taskId.trim();
-  let filteredPuzzles = v2Set;
-
-  if (searchTerm) {
-    try {
-      const pattern = searchTerm.startsWith('^') ? searchTerm : `^${searchTerm}`;
-      const regex = new RegExp(pattern, 'i');
-      filteredPuzzles = v2Set.filter(id => regex.test(id));
-    } catch (e) {
-      const lowerSearch = searchTerm.toLowerCase();
-      filteredPuzzles = v2Set.filter(id => id.toLowerCase().startsWith(lowerSearch));
-    }
-  }
 
   const loadPuzzleAndSolution = async (id: string) => {
     setIsLoading(true);
@@ -538,98 +592,18 @@ const ReasoningScreen: React.FC<ReasoningScreenProps> = () => {
   return (
     <div className="reasoning-screen" style={{ color: '#e0e0e0', padding: '20px' }}>
       <h2>Matrix Transformation Reasoning</h2>
-      <p>Select an ARC puzzle to fetch its published solution and visualize step-by-step matrix changes during transformation.</p>
+      <p>Select an ARC puzzle to explore reasoning visualization or interactive component solvers.</p>
 
       {/* Task Selector section */}
       <div className="task-loader" style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
-        <div className="puzzle-selector-container" ref={containerRef} style={{ position: 'relative' }}>
-          <input
-            type="text"
-            value={taskId}
-            onChange={(e) => {
-              setTaskId(e.target.value);
-              setShowDropdown(true);
-            }}
-            onFocus={() => setShowDropdown(true)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                loadPuzzleAndSolution(taskId);
-                setShowDropdown(false);
-              } else if (e.key === 'Escape') {
-                setShowDropdown(false);
-              }
-            }}
-            placeholder="Enter Task ID (e.g. 1ae2feb7)"
-            style={{
-              padding: '10px',
-              backgroundColor: '#1e1e1e',
-              border: '1px solid #444',
-              borderRadius: '4px',
-              color: '#fff',
-              width: '250px'
-            }}
-          />
-
-          {showDropdown && (
-            <ul className="puzzle-dropdown-list" style={{
-              position: 'absolute',
-              top: '100%',
-              left: 0,
-              right: 0,
-              maxHeight: '300px',
-              overflowY: 'auto',
-              backgroundColor: '#1e1e1e',
-              border: '1px solid #444',
-              borderRadius: '4px',
-              zIndex: 100,
-              listStyle: 'none',
-              padding: 0,
-              margin: '4px 0 0'
-            }}>
-              {filteredPuzzles.length > 0 ? (
-                filteredPuzzles.map((id) => {
-                  const isSolved = !!savedSolutions[id];
-                  const isDocumented = documentedPuzzles.includes(id);
-                  const isFailed = failedPuzzles.has(id);
-                  return (
-                    <li
-                      key={id}
-                      className={`puzzle-dropdown-item ${id === taskId ? 'selected' : ''}`}
-                      onClick={() => {
-                        setTaskId(id);
-                        loadPuzzleAndSolution(id);
-                        setShowDropdown(false);
-                      }}
-                      style={{
-                        padding: '8px 12px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        backgroundColor: id === taskId ? '#333' : 'transparent'
-                      }}
-                    >
-                      <span className="puzzle-id-text">{id}</span>
-                      <div className="puzzle-status-icons" style={{ display: 'flex', gap: '4px' }}>
-                        {isSolved && (
-                          <span className="status-icon solved-icon" style={{ color: '#4caf50' }} title="Solved">✓</span>
-                        )}
-                        {isDocumented && (
-                          <span className="status-icon documented-icon" style={{ color: '#0074D9' }} title="Documented">✓</span>
-                        )}
-                        {isFailed && (
-                          <span className="status-icon failed-icon" style={{ color: '#f44336' }} title="Failed to load">✗</span>
-                        )}
-                      </div>
-                    </li>
-                  );
-                })
-              ) : (
-                <li className="puzzle-dropdown-no-matches" style={{ padding: '8px 12px', color: '#888' }}>No matching puzzles</li>
-              )}
-            </ul>
-          )}
-        </div>
+        <PuzzleSelector
+          taskId={taskId}
+          onChangeTaskId={setTaskId}
+          onSelectTaskId={loadPuzzleAndSolution}
+          savedSolutions={savedSolutions}
+          documentedPuzzles={documentedPuzzles}
+          failedPuzzles={failedPuzzles}
+        />
 
         <button
           onClick={() => loadPuzzleAndSolution(taskId)}
@@ -645,6 +619,40 @@ const ReasoningScreen: React.FC<ReasoningScreenProps> = () => {
         >
           {isLoading ? 'Loading...' : 'Load Puzzle & Solution'}
         </button>
+
+        {/* Mode Toggle Buttons */}
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: '5px' }}>
+          <button
+            onClick={() => setMode('solver')}
+            className={mode === 'solver' ? 'active' : ''}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: mode === 'solver' ? '#0074D9' : '#333',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: 'bold'
+            }}
+          >
+            Interactive Solver
+          </button>
+          <button
+            onClick={() => setMode('visualization')}
+            className={mode === 'visualization' ? 'active' : ''}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: mode === 'visualization' ? '#0074D9' : '#333',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: 'bold'
+            }}
+          >
+            Solution Visualization
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -659,7 +667,7 @@ const ReasoningScreen: React.FC<ReasoningScreenProps> = () => {
         </div>
       )}
 
-      {taskData && solutionCode && (
+      {taskData && mode === 'visualization' && solutionCode && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {/* Case Selector and Case Visualizations */}
           <div style={{ backgroundColor: '#1e1e1e', padding: '20px', borderRadius: '8px', border: '1px solid #333' }}>
@@ -861,6 +869,197 @@ const ReasoningScreen: React.FC<ReasoningScreenProps> = () => {
             }}>
               {solutionCode}
             </pre>
+          </div>
+        </div>
+      )}
+
+      {taskData && mode === 'solver' && (
+        <div className="interactive-solver-section" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {/* Inputs Section */}
+          <div style={{ backgroundColor: '#1e1e1e', padding: '20px', borderRadius: '8px', border: '1px solid #333' }}>
+            <h3 style={{ marginTop: 0, borderBottom: '1px solid #333', paddingBottom: '10px' }}>Interactive Solver Configuration</h3>
+            <p style={{ color: '#aaa', fontSize: '0.9rem' }}>Configure parameters for the component extraction/identification function run on all matrices.</p>
+
+            <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap', marginTop: '15px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                <label style={{ fontSize: '0.9rem', color: '#bbb', fontWeight: 'bold' }}>Minimum Connected Components</label>
+                <input
+                  type="number"
+                  min={1}
+                  value={minComponents}
+                  onChange={(e) => setMinComponents(Math.max(1, parseInt(e.target.value) || 1))}
+                  style={{
+                    padding: '8px 12px',
+                    backgroundColor: '#2a2a2a',
+                    border: '1px solid #444',
+                    borderRadius: '4px',
+                    color: '#fff',
+                    width: '180px'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                <label style={{ fontSize: '0.9rem', color: '#bbb', fontWeight: 'bold' }}>Background Value/Color</label>
+                <select
+                  value={bgColor}
+                  onChange={(e) => setBgColor(parseInt(e.target.value))}
+                  style={{
+                    padding: '8px 12px',
+                    backgroundColor: '#2a2a2a',
+                    border: '1px solid #444',
+                    borderRadius: '4px',
+                    color: '#fff',
+                    width: '180px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value={0}>Black (0)</option>
+                  <option value={1}>Blue (1)</option>
+                  <option value={2}>Red (2)</option>
+                  <option value={3}>Green (3)</option>
+                  <option value={4}>Yellow (4)</option>
+                  <option value={5}>Gray (5)</option>
+                  <option value={6}>Magenta (6)</option>
+                  <option value={7}>Orange (7)</option>
+                  <option value={8}>Teal (8)</option>
+                  <option value={9}>Maroon (9)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Train & Test Cases Matrices Showcase */}
+          <div style={{ backgroundColor: '#1e1e1e', padding: '20px', borderRadius: '8px', border: '1px solid #333' }}>
+            <h3 style={{ marginTop: 0, borderBottom: '1px solid #333', paddingBottom: '10px' }}>Puzzle Matrices (Train & Test)</h3>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {/* Train Cases */}
+              <div>
+                <h4 style={{ color: '#4caf50', margin: '0 0 10px 0' }}>Train Cases</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '15px' }}>
+                  {taskData.train.map((tc: any, i: number) => {
+                    const inputStats = extractConnectedComponents(tc.input, bgColor);
+                    const outputStats = extractConnectedComponents(tc.output, bgColor);
+
+                    return (
+                      <div key={`solver-train-${i}`} style={{ backgroundColor: '#161616', border: '1px solid #333', borderRadius: '6px', padding: '15px' }}>
+                        <div style={{ fontWeight: 'bold', fontSize: '0.9rem', borderBottom: '1px solid #222', paddingBottom: '5px', marginBottom: '10px', color: '#999' }}>
+                          Train Case #{i}
+                        </div>
+                        <div style={{ display: 'flex', gap: '20px', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
+                          <div>
+                            <div style={{ fontSize: '0.75rem', color: '#888', marginBottom: '5px', textAlign: 'center' }}>INPUT</div>
+                            <MatrixVisualization data={tc.input} componentMap={inputStats.componentMap} />
+
+                            {/* Input Stats Display */}
+                            {inputStats.numComponents >= minComponents ? (
+                              <div style={{ marginTop: '10px', padding: '6px 10px', backgroundColor: '#1a1a1a', borderRadius: '4px', border: '1px solid #333', fontSize: '0.75rem', color: '#aaa', width: '150px' }}>
+                                <div style={{ color: '#4caf50', fontWeight: 'bold', marginBottom: '3px' }}>Components Stats:</div>
+                                <div>Count: {inputStats.numComponents}</div>
+                                <div>Max Size: {inputStats.maxSize}</div>
+                                <div>Min Size: {inputStats.minSize}</div>
+                                <div>Avg Size: {inputStats.avgSize}</div>
+                              </div>
+                            ) : (
+                              <div style={{ marginTop: '10px', padding: '6px 10px', backgroundColor: '#2a1a1a', borderRadius: '4px', border: '1px solid #552222', fontSize: '0.75rem', color: '#ffa0a0', width: '150px' }}>
+                                Component count ({inputStats.numComponents}) is below threshold ({minComponents})
+                              </div>
+                            )}
+                          </div>
+                          <div style={{ color: '#444', fontSize: '1.5rem', fontWeight: 'bold' }}>→</div>
+                          <div>
+                            <div style={{ fontSize: '0.75rem', color: '#888', marginBottom: '5px', textAlign: 'center' }}>OUTPUT</div>
+                            <MatrixVisualization data={tc.output} componentMap={outputStats.componentMap} />
+
+                            {/* Output Stats Display */}
+                            {outputStats.numComponents >= minComponents ? (
+                              <div style={{ marginTop: '10px', padding: '6px 10px', backgroundColor: '#1a1a1a', borderRadius: '4px', border: '1px solid #333', fontSize: '0.75rem', color: '#aaa', width: '150px' }}>
+                                <div style={{ color: '#4caf50', fontWeight: 'bold', marginBottom: '3px' }}>Components Stats:</div>
+                                <div>Count: {outputStats.numComponents}</div>
+                                <div>Max Size: {outputStats.maxSize}</div>
+                                <div>Min Size: {outputStats.minSize}</div>
+                                <div>Avg Size: {outputStats.avgSize}</div>
+                              </div>
+                            ) : (
+                              <div style={{ marginTop: '10px', padding: '6px 10px', backgroundColor: '#2a1a1a', borderRadius: '4px', border: '1px solid #552222', fontSize: '0.75rem', color: '#ffa0a0', width: '150px' }}>
+                                Component count ({outputStats.numComponents}) is below threshold ({minComponents})
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Test Cases */}
+              {taskData.test && taskData.test.length > 0 && (
+                <div>
+                  <h4 style={{ color: '#2196F3', margin: '20px 0 10px 0' }}>Test Cases</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '15px' }}>
+                    {taskData.test.map((tc: any, i: number) => {
+                      const inputStats = extractConnectedComponents(tc.input, bgColor);
+                      const outputStats = tc.output ? extractConnectedComponents(tc.output, bgColor) : null;
+
+                      return (
+                        <div key={`solver-test-${i}`} style={{ backgroundColor: '#161616', border: '1px solid #333', borderRadius: '6px', padding: '15px' }}>
+                          <div style={{ fontWeight: 'bold', fontSize: '0.9rem', borderBottom: '1px solid #222', paddingBottom: '5px', marginBottom: '10px', color: '#999' }}>
+                            Test Case #{i}
+                          </div>
+                          <div style={{ display: 'flex', gap: '20px', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
+                            <div>
+                              <div style={{ fontSize: '0.75rem', color: '#888', marginBottom: '5px', textAlign: 'center' }}>INPUT</div>
+                              <MatrixVisualization data={tc.input} componentMap={inputStats.componentMap} />
+
+                              {/* Input Stats Display */}
+                              {inputStats.numComponents >= minComponents ? (
+                                <div style={{ marginTop: '10px', padding: '6px 10px', backgroundColor: '#1a1a1a', borderRadius: '4px', border: '1px solid #333', fontSize: '0.75rem', color: '#aaa', width: '150px' }}>
+                                  <div style={{ color: '#4caf50', fontWeight: 'bold', marginBottom: '3px' }}>Components Stats:</div>
+                                  <div>Count: {inputStats.numComponents}</div>
+                                  <div>Max Size: {inputStats.maxSize}</div>
+                                  <div>Min Size: {inputStats.minSize}</div>
+                                  <div>Avg Size: {inputStats.avgSize}</div>
+                                </div>
+                              ) : (
+                                <div style={{ marginTop: '10px', padding: '6px 10px', backgroundColor: '#2a1a1a', borderRadius: '4px', border: '1px solid #552222', fontSize: '0.75rem', color: '#ffa0a0', width: '150px' }}>
+                                  Component count ({inputStats.numComponents}) is below threshold ({minComponents})
+                                </div>
+                              )}
+                            </div>
+                            {tc.output && (
+                              <>
+                                <div style={{ color: '#444', fontSize: '1.5rem', fontWeight: 'bold' }}>→</div>
+                                <div>
+                                  <div style={{ fontSize: '0.75rem', color: '#888', marginBottom: '5px', textAlign: 'center' }}>OUTPUT</div>
+                                  <MatrixVisualization data={tc.output} componentMap={outputStats ? outputStats.componentMap : undefined} />
+
+                                  {/* Output Stats Display */}
+                                  {outputStats && (outputStats.numComponents >= minComponents ? (
+                                    <div style={{ marginTop: '10px', padding: '6px 10px', backgroundColor: '#1a1a1a', borderRadius: '4px', border: '1px solid #333', fontSize: '0.75rem', color: '#aaa', width: '150px' }}>
+                                      <div style={{ color: '#4caf50', fontWeight: 'bold', marginBottom: '3px' }}>Components Stats:</div>
+                                      <div>Count: {outputStats.numComponents}</div>
+                                      <div>Max Size: {outputStats.maxSize}</div>
+                                      <div>Min Size: {outputStats.minSize}</div>
+                                      <div>Avg Size: {outputStats.avgSize}</div>
+                                    </div>
+                                  ) : (
+                                    <div style={{ marginTop: '10px', padding: '6px 10px', backgroundColor: '#2a1a1a', borderRadius: '4px', border: '1px solid #552222', fontSize: '0.75rem', color: '#ffa0a0', width: '150px' }}>
+                                      Component count ({outputStats.numComponents}) is below threshold ({minComponents})
+                                    </div>
+                                  ))}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
