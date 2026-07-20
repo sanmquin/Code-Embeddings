@@ -6,9 +6,15 @@ import puzzleClustersRaw from '../../data/puzzle_clusters.csv?raw';
 // @ts-ignore
 import arcTrainingRaw from '../../data/arc_training.min.json?raw';
 // @ts-ignore
-import filteredMatricesRaw from '../../data/6-A.filtered_matrices.csv?raw';
+import sameShapeMatricesRaw from '../../data/filters/0.same_shape_matrices.csv?raw';
 // @ts-ignore
-import filteredPuzzlesRaw from '../../data/6-B.filtered_puzzles.csv?raw';
+import sameShapePuzzlesRaw from '../../data/filters/0.same_shape_puzzles.csv?raw';
+// @ts-ignore
+import monochromaticMatricesRaw from '../../data/filters/1.monochromatic_matrices.csv?raw';
+// @ts-ignore
+import monochromaticPuzzlesRaw from '../../data/filters/1.monochromatic_puzzles.csv?raw';
+// @ts-ignore
+import noMotifsPuzzlesRaw from '../../data/filters/2.no_motifs_puzzles.csv?raw';
 
 interface CSVRow {
   taskId: string;
@@ -19,7 +25,12 @@ interface CSVRow {
 
 interface FilteredPuzzleRow {
   taskId: string;
-  matchingPairs: number;
+  matchingPairs?: number;
+  hasMotif?: number;
+  gridCount?: number;
+  maxDimension?: number;
+  uniqueColors?: number;
+  averageDensity?: number;
 }
 
 interface FilteredMatrixRow {
@@ -87,6 +98,11 @@ const parseFilteredPuzzles = (csvText: string): FilteredPuzzleRow[] => {
 
   const taskIdIdx = headers.indexOf('task_id');
   const matchingPairsIdx = headers.indexOf('matching_pairs');
+  const hasMotifIdx = headers.indexOf('has_motif');
+  const gridCountIdx = headers.indexOf('grid_count');
+  const maxDimensionIdx = headers.indexOf('max_dimension');
+  const uniqueColorsIdx = headers.indexOf('unique_colors');
+  const averageDensityIdx = headers.indexOf('average_density');
 
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim();
@@ -94,14 +110,37 @@ const parseFilteredPuzzles = (csvText: string): FilteredPuzzleRow[] => {
     const parts = line.split(',');
 
     const tId = taskIdIdx !== -1 ? parts[taskIdIdx] : parts[0];
-    const matchingPairsPart = matchingPairsIdx !== -1 ? parts[matchingPairsIdx] : parts[1];
-
     if (tId) {
-      const val = parseInt(matchingPairsPart?.trim() || '0', 10);
-      rows.push({
+      const row: FilteredPuzzleRow = {
         taskId: tId.trim(),
-        matchingPairs: isNaN(val) ? 0 : val,
-      });
+      };
+
+      if (matchingPairsIdx !== -1) {
+        const val = parseInt(parts[matchingPairsIdx]?.trim() || '0', 10);
+        row.matchingPairs = isNaN(val) ? 0 : val;
+      }
+      if (hasMotifIdx !== -1) {
+        const val = parseInt(parts[hasMotifIdx]?.trim() || '0', 10);
+        row.hasMotif = isNaN(val) ? 0 : val;
+      }
+      if (gridCountIdx !== -1) {
+        const val = parseInt(parts[gridCountIdx]?.trim() || '0', 10);
+        row.gridCount = isNaN(val) ? 0 : val;
+      }
+      if (maxDimensionIdx !== -1) {
+        const val = parseInt(parts[maxDimensionIdx]?.trim() || '0', 10);
+        row.maxDimension = isNaN(val) ? 0 : val;
+      }
+      if (uniqueColorsIdx !== -1) {
+        const val = parseInt(parts[uniqueColorsIdx]?.trim() || '0', 10);
+        row.uniqueColors = isNaN(val) ? 0 : val;
+      }
+      if (averageDensityIdx !== -1) {
+        const val = parseFloat(parts[averageDensityIdx]?.trim() || '0');
+        row.averageDensity = isNaN(val) ? 0 : val;
+      }
+
+      rows.push(row);
     }
   }
   return rows;
@@ -186,24 +225,6 @@ const ClusterVisualizationScreen: React.FC<ClusterVisualizationScreenProps> = ({
     }
   }, []);
 
-  const parsedFilteredPuzzles = useMemo(() => {
-    try {
-      return parseFilteredPuzzles(filteredPuzzlesRaw);
-    } catch (e) {
-      console.error('Failed to parse 6-B.filtered_puzzles.csv', e);
-      return [];
-    }
-  }, []);
-
-  const parsedFilteredMatrices = useMemo(() => {
-    try {
-      return parseFilteredMatrices(filteredMatricesRaw);
-    } catch (e) {
-      console.error('Failed to parse 6-A.filtered_matrices.csv', e);
-      return [];
-    }
-  }, []);
-
   const arcTrainingData = useMemo(() => {
     try {
       return JSON.parse(arcTrainingRaw);
@@ -212,6 +233,50 @@ const ClusterVisualizationScreen: React.FC<ClusterVisualizationScreenProps> = ({
       return {};
     }
   }, []);
+
+  // Dynamically select raw file data based on the active filter
+  const { currentPuzzlesRaw, currentMatricesRaw } = useMemo(() => {
+    if (selectedFilter === 'same_shapes') {
+      return {
+        currentPuzzlesRaw: sameShapePuzzlesRaw,
+        currentMatricesRaw: sameShapeMatricesRaw,
+      };
+    } else if (selectedFilter === 'monochromatic') {
+      return {
+        currentPuzzlesRaw: monochromaticPuzzlesRaw,
+        currentMatricesRaw: monochromaticMatricesRaw,
+      };
+    } else if (selectedFilter === 'no_motif') {
+      return {
+        currentPuzzlesRaw: noMotifsPuzzlesRaw,
+        currentMatricesRaw: '',
+      };
+    }
+    return {
+      currentPuzzlesRaw: '',
+      currentMatricesRaw: '',
+    };
+  }, [selectedFilter]);
+
+  const parsedFilteredPuzzles = useMemo(() => {
+    try {
+      if (!currentPuzzlesRaw) return [];
+      return parseFilteredPuzzles(currentPuzzlesRaw);
+    } catch (e) {
+      console.error(`Failed to parse puzzles raw data for filter ${selectedFilter}`, e);
+      return [];
+    }
+  }, [currentPuzzlesRaw, selectedFilter]);
+
+  const parsedFilteredMatrices = useMemo(() => {
+    try {
+      if (!currentMatricesRaw) return [];
+      return parseFilteredMatrices(currentMatricesRaw);
+    } catch (e) {
+      console.error(`Failed to parse matrices raw data for filter ${selectedFilter}`, e);
+      return [];
+    }
+  }, [currentMatricesRaw, selectedFilter]);
 
   // Dynamically compute unique clusters from the data
   const uniqueClusters = useMemo(() => {
@@ -261,7 +326,7 @@ const ClusterVisualizationScreen: React.FC<ClusterVisualizationScreenProps> = ({
   // Compute stats for filtered puzzles
   const filterStats = useMemo(() => {
     if (availableFilteredPuzzles.length === 0) return null;
-    const totalMatchingPairs = availableFilteredPuzzles.reduce((sum, p) => sum + p.matchingPairs, 0);
+    const totalMatchingPairs = availableFilteredPuzzles.reduce((sum, p) => sum + (p.matchingPairs || 0), 0);
     const averageMatchingPairs = totalMatchingPairs / availableFilteredPuzzles.length;
 
     // Get number of total grids and splits
@@ -272,12 +337,31 @@ const ClusterVisualizationScreen: React.FC<ClusterVisualizationScreenProps> = ({
       totalGrids += (trainLen + testLen);
     });
 
-    return {
-      puzzlesCount: availableFilteredPuzzles.length,
-      averageMatchingPairs: Math.round(averageMatchingPairs * 10) / 10,
-      totalGrids,
-    };
-  }, [availableFilteredPuzzles]);
+    if (selectedFilter === 'no_motif') {
+      const sumMaxDimension = availableFilteredPuzzles.reduce((sum, p) => sum + (p.maxDimension || 0), 0);
+      const averageMaxDimension = sumMaxDimension / availableFilteredPuzzles.length;
+
+      const sumUniqueColors = availableFilteredPuzzles.reduce((sum, p) => sum + (p.uniqueColors || 0), 0);
+      const averageUniqueColors = sumUniqueColors / availableFilteredPuzzles.length;
+
+      const sumDensity = availableFilteredPuzzles.reduce((sum, p) => sum + (p.averageDensity || 0), 0);
+      const averageDensity = sumDensity / availableFilteredPuzzles.length;
+
+      return {
+        puzzlesCount: availableFilteredPuzzles.length,
+        totalGrids,
+        averageMaxDimension: Math.round(averageMaxDimension * 10) / 10,
+        averageUniqueColors: Math.round(averageUniqueColors * 10) / 10,
+        averageDensity: Math.round(averageDensity * 1000) / 10,
+      };
+    } else {
+      return {
+        puzzlesCount: availableFilteredPuzzles.length,
+        averageMatchingPairs: Math.round(averageMatchingPairs * 10) / 10,
+        totalGrids,
+      };
+    }
+  }, [availableFilteredPuzzles, selectedFilter]);
 
   // Compute cluster statistics for researcher analysis
   const clusterStats = useMemo(() => {
@@ -404,6 +488,8 @@ const ClusterVisualizationScreen: React.FC<ClusterVisualizationScreenProps> = ({
         >
           <option value="none">None (Show Clusters)</option>
           <option value="same_shapes">same shapes puzzle (color change)</option>
+          <option value="monochromatic">monochromatic filter</option>
+          <option value="no_motif">no-motif filter</option>
         </select>
       </div>
 
@@ -679,25 +765,50 @@ const ClusterVisualizationScreen: React.FC<ClusterVisualizationScreenProps> = ({
                   {filterStats.puzzlesCount} <span style={{ fontSize: '0.9rem', fontWeight: 'normal', color: '#888' }}>matching puzzles</span>
                 </div>
               </div>
-              <div>
-                <div style={{ fontSize: '0.85rem', color: '#888', textTransform: 'uppercase' }}>Avg Matching Pairs</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2ECC40', marginTop: '5px' }}>
-                  {filterStats.averageMatchingPairs} <span style={{ fontSize: '0.9rem', fontWeight: 'normal', color: '#888' }}>pairs/puzzle</span>
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: '0.85rem', color: '#888', textTransform: 'uppercase' }}>Total Grids</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#0074D9', marginTop: '5px' }}>
-                  {filterStats.totalGrids} <span style={{ fontSize: '0.9rem', fontWeight: 'normal', color: '#888' }}>grids</span>
-                </div>
-              </div>
+              {selectedFilter !== 'no_motif' ? (
+                <>
+                  <div>
+                    <div style={{ fontSize: '0.85rem', color: '#888', textTransform: 'uppercase' }}>Avg Matching Pairs</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2ECC40', marginTop: '5px' }}>
+                      {filterStats.averageMatchingPairs} <span style={{ fontSize: '0.9rem', fontWeight: 'normal', color: '#888' }}>pairs/puzzle</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.85rem', color: '#888', textTransform: 'uppercase' }}>Total Grids</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#0074D9', marginTop: '5px' }}>
+                      {filterStats.totalGrids} <span style={{ fontSize: '0.9rem', fontWeight: 'normal', color: '#888' }}>grids</span>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <div style={{ fontSize: '0.85rem', color: '#888', textTransform: 'uppercase' }}>Avg Max Dimension</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2ECC40', marginTop: '5px' }}>
+                      {filterStats.averageMaxDimension} <span style={{ fontSize: '0.9rem', fontWeight: 'normal', color: '#888' }}>cells</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.85rem', color: '#888', textTransform: 'uppercase' }}>Avg Unique Colors</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#F012BE', marginTop: '5px' }}>
+                      {filterStats.averageUniqueColors} <span style={{ fontSize: '0.9rem', fontWeight: 'normal', color: '#888' }}>colors</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.85rem', color: '#888', textTransform: 'uppercase' }}>Avg Density</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#0074D9', marginTop: '5px' }}>
+                      {filterStats.averageDensity}% <span style={{ fontSize: '0.9rem', fontWeight: 'normal', color: '#888' }}>density</span>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
 
           {/* Filtered Puzzles List */}
           {availableFilteredPuzzles.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '40px', backgroundColor: '#1e1e1e', borderRadius: '6px', border: '1px solid #333' }}>
-              <p style={{ fontSize: '1.1rem', color: '#aaa' }}>No parsed puzzles found for same shapes puzzle filter.</p>
+              <p style={{ fontSize: '1.1rem', color: '#aaa' }}>No parsed puzzles found for {selectedFilter === 'same_shapes' ? 'same shapes puzzle' : selectedFilter === 'monochromatic' ? 'monochromatic' : 'no-motif'} filter.</p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
@@ -735,9 +846,23 @@ const ClusterVisualizationScreen: React.FC<ClusterVisualizationScreenProps> = ({
                             Explore in Reasoning ➔
                           </button>
                         )}
-                        <span style={{ backgroundColor: '#2a2a2a', color: '#aaa', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem' }}>
-                          {task.matchingPairs} matching pairs
-                        </span>
+                        {selectedFilter === 'no_motif' ? (
+                          <>
+                            <span style={{ backgroundColor: '#2a2a2a', color: '#aaa', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem' }}>
+                              Max Dimension: {task.maxDimension}
+                            </span>
+                            <span style={{ backgroundColor: '#2a2a2a', color: '#aaa', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem' }}>
+                              Unique Colors: {task.uniqueColors}
+                            </span>
+                            <span style={{ backgroundColor: '#2a2a2a', color: '#aaa', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem' }}>
+                              Avg Density: {task.averageDensity !== undefined ? (task.averageDensity * 100).toFixed(1) + '%' : 'N/A'}
+                            </span>
+                          </>
+                        ) : (
+                          <span style={{ backgroundColor: '#2a2a2a', color: '#aaa', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem' }}>
+                            {task.matchingPairs} matching pairs
+                          </span>
+                        )}
                       </div>
                       <div style={{ fontSize: '0.85rem', color: '#888' }}>
                         Train Examples: {task.taskData?.train?.length || 0} | Test Examples: {task.taskData?.test?.length || 0}
@@ -757,7 +882,7 @@ const ClusterVisualizationScreen: React.FC<ClusterVisualizationScreenProps> = ({
                       {/* Train examples mapping */}
                       {task.taskData?.train?.map((tc: any, idx: number) => {
                         const matrixMatch = getMatrixFilteredMatch(task.taskId, 'train', idx);
-                        const isMatch = !!matrixMatch;
+                        const isMatch = selectedFilter === 'no_motif' ? true : !!matrixMatch;
 
                         return (
                           <div
@@ -834,7 +959,7 @@ const ClusterVisualizationScreen: React.FC<ClusterVisualizationScreenProps> = ({
                       {/* Test examples mapping */}
                       {task.taskData?.test?.map((tc: any, idx: number) => {
                         const matrixMatch = getMatrixFilteredMatch(task.taskId, 'test', idx);
-                        const isMatch = !!matrixMatch;
+                        const isMatch = selectedFilter === 'no_motif' ? true : !!matrixMatch;
 
                         return (
                           <div
