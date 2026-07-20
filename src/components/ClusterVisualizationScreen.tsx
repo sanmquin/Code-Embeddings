@@ -34,6 +34,10 @@ interface FilteredMatrixRow {
   shapeChangeRate: number;
 }
 
+interface ClusterVisualizationScreenProps {
+  onNavigateToReasoning?: (taskId: string) => void;
+}
+
 const parseCSV = (csvText: string): CSVRow[] => {
   const lines = csvText.split('\n');
   const rows: CSVRow[] = [];
@@ -167,7 +171,7 @@ const COLOR_NAMES: { [key: number]: string } = {
   9: 'Maroon',
 };
 
-const ClusterVisualizationScreen: React.FC = () => {
+const ClusterVisualizationScreen: React.FC<ClusterVisualizationScreenProps> = ({ onNavigateToReasoning }) => {
   const [selectedCluster, setSelectedCluster] = useState<number>(0);
   const [loadedCount, setLoadedCount] = useState<number>(10);
   const [selectedFilter, setSelectedFilter] = useState<string>('none');
@@ -514,6 +518,23 @@ const ClusterVisualizationScreen: React.FC = () => {
                       <h3 style={{ margin: 0, color: '#ffdc00', fontSize: '1.25rem', fontFamily: 'monospace' }}>
                         Task: {task.taskId}
                       </h3>
+                      {onNavigateToReasoning && (
+                        <button
+                          onClick={() => onNavigateToReasoning(task.taskId)}
+                          style={{
+                            padding: '4px 10px',
+                            backgroundColor: '#0074D9',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '0.8rem',
+                            fontWeight: 'bold'
+                          }}
+                        >
+                          Explore in Reasoning ➔
+                        </button>
+                      )}
                       <span style={{ backgroundColor: '#2a2a2a', color: '#aaa', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem' }}>
                         {task.numGrids} total grids
                       </span>
@@ -697,6 +718,23 @@ const ClusterVisualizationScreen: React.FC = () => {
                         <h3 style={{ margin: 0, color: '#ffdc00', fontSize: '1.25rem', fontFamily: 'monospace' }}>
                           Task: {task.taskId}
                         </h3>
+                        {onNavigateToReasoning && (
+                          <button
+                            onClick={() => onNavigateToReasoning(task.taskId)}
+                            style={{
+                              padding: '4px 10px',
+                              backgroundColor: '#0074D9',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '0.8rem',
+                              fontWeight: 'bold'
+                            }}
+                          >
+                            Explore in Reasoning ➔
+                          </button>
+                        )}
                         <span style={{ backgroundColor: '#2a2a2a', color: '#aaa', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem' }}>
                           {task.matchingPairs} matching pairs
                         </span>

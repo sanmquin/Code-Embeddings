@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import TransformationScreen from './components/TransformationScreen'
 import ExecutionScreen from './components/ExecutionScreen'
 import PublishScreen from './components/PublishScreen'
@@ -6,6 +6,7 @@ import LibraryScreen from './components/LibraryScreen'
 import ReasoningScreen from './components/ReasoningScreen'
 import ClusterVisualizationScreen from './components/ClusterVisualizationScreen'
 import BatchDocScreen from './components/BatchDocScreen'
+import PuzzleSelector from './components/PuzzleSelector'
 import { getArcPythonUrlPatterns, getArcJsonUrl } from './constants'
 import './index.css'
 
@@ -27,33 +28,15 @@ function App() {
   const [debugInfo, setDebugInfo] = useState<{ pythonUrls: string[], jsonUrl: string } | null>(null)
   const [testsPassed, setTestsPassed] = useState<boolean>(false)
   const [failedPuzzles, setFailedPuzzles] = useState<Set<string>>(new Set())
-  const [showDropdown, setShowDropdown] = useState<boolean>(false)
-  const containerRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setShowDropdown(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [])
+  // Reasoning-specific shared state
+  const [reasoningTaskId, setReasoningTaskId] = useState<string>('00576224')
+  const [reasoningDefaultMode, setReasoningDefaultMode] = useState<'solver' | 'visualization'>('solver')
 
-  const searchTerm = taskId.trim()
-  let filteredPuzzles = v2Set
-
-  if (searchTerm) {
-    try {
-      const pattern = searchTerm.startsWith('^') ? searchTerm : `^${searchTerm}`
-      const regex = new RegExp(pattern, 'i')
-      filteredPuzzles = v2Set.filter(id => regex.test(id))
-    } catch (e) {
-      const lowerSearch = searchTerm.toLowerCase()
-      filteredPuzzles = v2Set.filter(id => id.toLowerCase().startsWith(lowerSearch))
-    }
+  const navigateToReasoning = (puzzleId: string) => {
+    setReasoningTaskId(puzzleId)
+    setReasoningDefaultMode('solver')
+    setMainTab('reasoning')
   }
 
   const [savedSolutions, setSavedSolutions] = useState<Record<string, string>>(() => {
@@ -192,64 +175,14 @@ function App() {
             <p>Transforming ARC solutions into modular, reusable functions.</p>
 
             <div className="task-loader">
-              <div className="puzzle-selector-container" ref={containerRef}>
-                <input
-                  type="text"
-                  value={taskId}
-                  onChange={(e) => {
-                    setTaskId(e.target.value)
-                    setShowDropdown(true)
-                  }}
-                  onFocus={() => setShowDropdown(true)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      loadTask(taskId)
-                      setShowDropdown(false)
-                    } else if (e.key === 'Escape') {
-                      setShowDropdown(false)
-                    }
-                  }}
-                  placeholder="Enter Task ID (e.g. 00576224)"
-                />
-
-                {showDropdown && (
-                  <ul className="puzzle-dropdown-list">
-                    {filteredPuzzles.length > 0 ? (
-                      filteredPuzzles.map((id) => {
-                        const isSolved = !!savedSolutions[id]
-                        const isDocumented = documentedPuzzles.includes(id)
-                        const isFailed = failedPuzzles.has(id)
-                        return (
-                          <li
-                            key={id}
-                            className={`puzzle-dropdown-item ${id === taskId ? 'selected' : ''}`}
-                            onClick={() => {
-                              setTaskId(id)
-                              loadTask(id)
-                              setShowDropdown(false)
-                            }}
-                          >
-                            <span className="puzzle-id-text">{id}</span>
-                            <div className="puzzle-status-icons">
-                              {isSolved && (
-                                <span className="status-icon solved-icon" title="Solved">✓</span>
-                              )}
-                              {isDocumented && (
-                                <span className="status-icon documented-icon" style={{ color: '#0074D9' }} title="Documented">✓</span>
-                              )}
-                              {isFailed && (
-                                <span className="status-icon failed-icon" title="Failed to load">✗</span>
-                              )}
-                            </div>
-                          </li>
-                        )
-                      })
-                    ) : (
-                      <li className="puzzle-dropdown-no-matches">No matching puzzles</li>
-                    )}
-                  </ul>
-                )}
-              </div>
+              <PuzzleSelector
+                taskId={taskId}
+                onChangeTaskId={setTaskId}
+                onSelectTaskId={loadTask}
+                savedSolutions={savedSolutions}
+                documentedPuzzles={documentedPuzzles}
+                failedPuzzles={failedPuzzles}
+              />
 
               <button onClick={() => loadTask(taskId)} disabled={isLoading}>
                 {isLoading ? 'Loading...' : 'Load Puzzle'}
@@ -376,9 +309,12 @@ function App() {
       ) : mainTab === 'library' ? (
         <LibraryScreen />
       ) : mainTab === 'reasoning' ? (
-        <ReasoningScreen />
+        <ReasoningScreen
+          initialTaskId={reasoningTaskId}
+          initialMode={reasoningDefaultMode}
+        />
       ) : (
-        <ClusterVisualizationScreen />
+        <ClusterVisualizationScreen onNavigateToReasoning={navigateToReasoning} />
       )}
     </div>
   )
